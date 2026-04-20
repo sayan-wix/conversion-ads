@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "embed": "node scripts/embed-library.mjs",
+    "extract-new-docs": "node scripts/extract-new-docs.mjs",
     "predev": "npm run embed",
     "prebuild": "npm run embed",
     "dev": "next dev",

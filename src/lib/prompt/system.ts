@@ -1,7 +1,10 @@
 import { GUARDRAIL_RULES } from "./guardrails";
 import { getFrameworkInstructions, FRAMEWORKS, type FrameworkId } from "./frameworks";
+import { HEADLINE_RULES, HEADLINES_MARKER } from "./headlines";
 import type { WizardInput } from "../validate";
 import { PATTERN_LIBRARY } from "../generated/pattern-library";
+
+export { HEADLINES_MARKER };
 
 /**
  * The pattern library is embedded at build time via scripts/embed-library.mjs.
@@ -32,10 +35,14 @@ export function buildSystemBlocks(framework: FrameworkId): SystemBlock[] {
 
   const preamble = `You are an elite direct-response copywriter generating Meta-ready evergreen ads.
 You have been trained on a master pattern library of proven ad frameworks (below).
-Your job: produce ONE complete, flowing ad that follows the chosen framework, matches
-the voice signals in the library, and obeys the guardrails below.
+Your job: produce TWO things in order:
 
-The output is a single continuous Meta ad — no section headers, no [HOOK]/[BODY]/
+1. ONE complete, flowing ad that follows the chosen framework, matches the voice
+   signals in the library, and obeys the guardrails below.
+2. After the ad, a second block of 20 ad headlines following the Headline
+   Generation rules that appear later in this system prompt.
+
+The ad itself is a single continuous Meta ad — no section headers, no [HOOK]/[BODY]/
 [PROOF]/[CTA] markers, no labels. Weave the hook, body, proof (if supplied), and
 call-to-action naturally into the shape the chosen framework calls for.
 
@@ -50,10 +57,12 @@ you. If <proof> is empty, the ad stands without specific proof — never fabrica
 
   const patternBlock = `# PATTERN LIBRARY (your source of truth)\n\n${library}`;
 
-  // Block 1+2 are stable → cache them together with one breakpoint at the end of guardrails.
+  // Block 1+2 are stable → cache them together with one breakpoint at the end of
+  // guardrails + headline rules. Headline rules are also stable (per-user-owner)
+  // so they belong in the cached prefix.
   const stableHead: SystemBlock = {
     type: "text",
-    text: `${preamble}\n\n${patternBlock}\n\n${GUARDRAIL_RULES}`,
+    text: `${preamble}\n\n${patternBlock}\n\n${GUARDRAIL_RULES}\n\n${HEADLINE_RULES}`,
     cache_control: { type: "ephemeral" },
   };
 
@@ -85,8 +94,11 @@ export function buildUserMessage(input: WizardInput): string {
     proofBlock,
     `<cta>\n${input.cta.trim()}\n</cta>`,
     "",
-    "Output ONLY the ad copy itself — one continuous, flowing piece of writing.",
-    "No section headers, no labels, no markers. Just the ad.",
+    "Output the ad copy first — one continuous, flowing piece of writing with",
+    "no section headers or labels. Then emit the exact marker",
+    `${HEADLINES_MARKER} on its own line, then the 20 headlines following the`,
+    "Headline Generation rules (5 short & punchy, 5 longer, 5 power words,",
+    "5 polarizing, in that order, numbered 1-20 under their category labels).",
   ].join("\n");
 }
 
@@ -102,5 +114,5 @@ export function buildRegenerateMessage(
   const base = buildUserMessage(input);
   if (!previousVersion?.trim()) return base;
 
-  return `${base}\n\nThe previous version of this ad was:\n"""\n${previousVersion.trim()}\n"""\n\nWrite a meaningfully DIFFERENT version — new opening line, new angle into the mechanism, new beats. Do not repeat the same hook or structure. Same framework, same inputs, fresh execution.`;
+  return `${base}\n\nThe previous version of the full output (ad + headlines) was:\n"""\n${previousVersion.trim()}\n"""\n\nWrite a meaningfully DIFFERENT version — new opening line, new angle into the mechanism, new beats, and 20 fresh headlines (no repeats from the previous list). Do not repeat the same hook or structure. Same framework, same inputs, fresh execution. Still emit the ${HEADLINES_MARKER} marker between the ad and the headlines.`;
 }

@@ -1,12 +1,16 @@
 # Master Pattern Library: Evergreen Ad Generator
 
-**Sources Processed:** 4 documents
+**Sources Processed:** 8 documents
 **Date Built:** 2026-04-20
 **Source Files:**
 - `zac1-extracted.md` — Zac's Evergreen Ad Templates (Direct Ads, Story Ads, Micro Offer & Mid-Ticket frameworks)
 - `NHB-ads-extracted.md` — Ben Valen's "How To Write REALLY Good Ads" (7 named ad templates, headline/opener systems)
 - `framework-and-templates-extracted.md` — Evergreen Ad Framework + 5 Fill-in-the-Blank Templates
 - `belief-engineering-extracted.md` — Ben Valen's Belief Engineering Masterclass (doctrine layer)
+- `headline-templates-raw.txt` — Evergreen Ad Headline Templates & Examples (11 fill-in-the-blank templates + real examples)
+- `power-words-raw.txt` — Power Word Examples for Ad Headlines (categorized reference list)
+- `head-turner-raw.txt` — Head Turner Frameworks & Examples (Story + Direct headline patterns with fill-in-the-blank structures)
+- `copy-blocks-raw.txt` — Copy Blocks Training Director's Cut (P3C2 + Conditions framework — pain, promise, proof, constraints, curiosity, conditions)
 
 ---
 
@@ -304,6 +308,99 @@ The voice across all sources shares a distinct signature: casual authority (real
 
 ---
 
+### Copy Blocks Principles (P3C2 + Conditions) [SINGLE] [domains: copy-blocks, universal]
+- **Statement:** Every piece of winning copy can be analyzed and improved as a composition of six copy blocks: **Pain, Promise, Proof, Constraints, Curiosity, Conditions** (three P blocks, two C blocks, plus the sixth "conditions" block). If a piece of copy is underperforming, the diagnosis is almost always that one or more of these blocks is missing or weak. When generating or revising ad copy, silently scan for the presence and strength of each block.
+- **The six blocks defined:**
+  - **Pain** — What is bothering them. Call it out.
+  - **Promise** — What they want. The core transformation, stated boldly and early.
+  - **Proof** — Why they should believe you can deliver it.
+  - **Constraints** — What's blocking them (things they don't want to do, have tried, can't afford, don't have time for, identity limits).
+  - **Curiosity** — The unique mechanism / idea / angle that dissolves the constraint and delivers the promise.
+  - **Conditions** — Urgency, scarcity, guarantees, qualifications, risk reversal, value adds, bonuses, terms/structures. The "make it a no-brainer" layer.
+- **Three core operating principles:**
+  1. **Clarity is king** — Never sacrifice clarity for cleverness. If it's not clear, it's not working, no matter how many blocks are present.
+  2. **80/20 science and art** — The blocks are the science (procedural). Ratios, voice, and mechanism creativity are the art (judgment). Don't look for a formula for "how many proof blocks do I need" — use judgment.
+  3. **Throw away the ladder** — The goal is to internalize the blocks so deeply you stop consciously checking them. Intuition beats checklist — but only after mastery.
+- **Key quotes:** "Pain promise, proof, constraints and curiosity. This is our friend P3C2." / "The point of good writing is for the reader to understand. The point of good persuasion is for the prospect to feel understood." / "Copy is the literature of people's dreams." / "Proof in copy is not about winning a local battle — it's about creating the feeling of proof and trust."
+- **Sources:** copy-blocks-raw.txt
+
+---
+
+### The Pain Chain / Pain Ladder [SINGLE] [domains: copy-blocks, body-copy]
+- **Statement:** Pain is not one thing. It escalates through five levels, and strong copy weaves them in sequence. When generating the "Problem Story" block of any evergreen ad, run through this ladder.
+- **The ladder (in order):**
+  1. **General pain** — Overarching description of what's bothering them.
+  2. **Specific pain** — Concrete specifics of that pain.
+  3. **Cinematic pain** — The visual / "movie" of what that pain looks like in their life (also called dimensionalization).
+  4. **Emotional pain** — What they are feeling moment-to-moment as they live with it.
+  5. **Core wound** — The nuclear existential dread at the heart of their pain.
+- **Companion: Promise Ladder** — Mirrors the pain chain in reverse. General promises → specific promises → cinematic promises → emotional promises → core transformation. Err on the side of too many promises; most copy under-promises.
+- **Key quote:** "It's very, very cathartic to have your pain accurately described and understood."
+- **Sources:** copy-blocks-raw.txt
+
+---
+
+### The Big Three Constraints (Money, Time, Effort) [SINGLE] [domains: copy-blocks, universal]
+- **Statement:** Every market has the same three universal constraints, plus niche-specific ones. Name them, then dissolve them with the curiosity block (mechanism). The constraint and the curiosity are "twin brothers" — the curiosity element should directly dissolve the constraint.
+- **The big three:** Money ("I can't afford it"), Time ("I don't have time"), Effort ("This is too hard"). Different markets have different ratios (people with money don't have time; people with time don't have money) — but all three exist in every market.
+- **Beyond the big three:** Identity constraints ("I'm not the kind of person who…"), value constraints ("I don't want to yell at my dog / scam grandmothers / be aggressive"), prior-failure constraints ("I've tried this before").
+- **The Little Big Idea:** Tie together (1) what the market wants (promise), (2) what they don't want to do (constraints), and (3) what's unique about your offer (curiosity/mechanism). Example: "Lunch Break Millionaire" = wants money + doesn't want to spend all day + 10-minute trading mechanism.
+- **Key quote:** "The constraint is baked into the curiosity. And that's always where you should put your mind to."
+- **Sources:** copy-blocks-raw.txt
+
+---
+
+### The CRAVE Quality Check [SINGLE] [domains: copy-blocks, universal]
+- **Statement:** A universal check for any copy block — a way to strengthen pain, promise, proof, constraints, curiosity, or conditions. Applies to headlines, body copy, testimonials, bullets — everything.
+- **CRAVE stands for:**
+  - **C — Clear:** Is it actually understandable on first read?
+  - **R — Relevant:** Is this what the market actually wants or fears? Not what you think they should want.
+  - **A — Accurate:** Is it specifically the thing they want, not an adjacent thing? Nuances matter.
+  - **V — Visual:** Can we dimensionalize it? Make it a picture they can see in their head?
+  - **E — Expressive + Specific:** Is it emotionally expressive, and is it specific (not generic)?
+- **Usage:** When revising ad copy, run each block through CRAVE. Upgrade any letter that fails.
+- **Sources:** copy-blocks-raw.txt
+
+---
+
+### Proof Is Felt, Not Proven [SINGLE] [domains: copy-blocks, proof]
+- **Statement:** Proof in copy is not about winning an argument — it's about creating the feeling of trust. Over-proving backfires: when you keep stacking evidence after the feeling of proof is already installed, the reader becomes MORE skeptical ("why are they trying so hard to convince me?"). Match the level of proof to the level of promise.
+- **Five proof categories (rank from hardest to fake → easiest):**
+  1. **Experiential proof** — Let them experience a piece of the transformation in the ad itself (hardest to come up with, most powerful when available).
+  2. **Psychological proof** — Technical jargon (slipped in subtly), candid communication ("these aren't perfect, but…"), explanatory reasoning ("because X"). Underutilized and pound-for-pound the most powerful.
+  3. **Empirical proof** — Scientific studies, data, numbers. Most commonly used.
+  4. **Credible proof** — Third-party authority: certifications, expert endorsements, press coverage, awards, track record.
+  5. **Social proof** — Case studies, testimonials, reviews, metrics.
+- **Proof rules of thumb:** Match proof level to promise level. Harder-to-fake proof is stronger. Don't overdo it — the feeling of trust is the goal, not a logical airtight case.
+- **Key quote:** "Proof in copy is not about winning a local battle. It's about creating the feeling of proof and trust."
+- **Sources:** copy-blocks-raw.txt
+
+---
+
+### The Curiosity Thinking Tools (Epiphany Threshold + Intuition Pumps + Idea Caricature) [SINGLE] [domains: copy-blocks, headlines, body-copy]
+- **Statement:** The curiosity block is where most copywriters are weakest. Three thinking tools make curiosity mechanisms land:
+  1. **Epiphany Threshold** — Beliefs live on a 0–10 scale of newness/believability. 1–5 is obvious ("eat less to lose weight"). 6–9 is the Goldilocks zone ("eating carbs in the morning burns fat"). 9–10 is unbelievable ("eat unlimited pizza to lose weight"). Aim for 6–8.
+  2. **Intuition Pumps** — Make the mechanism instantly understandable by borrowing patterns the reader already knows: natural metaphors (drought, tsunami, vortex, tornado), mechanical metaphors (switches, plugs, circuits, doors, dials), forces from nature (gravity), and strong associations ("off-market dating system" borrows from real estate).
+  3. **Idea Caricature** — Exaggerate the most surprising, subversive, taboo, or weird aspect of your idea. Kidney bean extract → "eat this white carb before bed to burn fat." The reader imagines pizza/pasta, not a supplement.
+- **The Curiosity Quadrant:** Ideas can come from four angles — market's view of the problem / your view of the problem / market's view of solutions / your view of the actual solution.
+- **Key principle:** Give the reader just enough information to start guessing, not enough to know. "Hold a magnet close — the closer you get, the stronger the tension." Too specific = no tension; too vague = no hook.
+- **Sources:** copy-blocks-raw.txt
+
+---
+
+### The Copy Blocks Equation (Copy Velocity) [SINGLE] [domains: copy-blocks, universal]
+- **Statement:** A diagnostic formula for how strong any piece of copy is. Derived from Hormozi's Value Equation but applied to copy.
+- **Formula:** `(Promise × Proof × Curiosity) ÷ Constraints × Conditions = Copy Strength`
+  - **Promise** = dream outcome
+  - **Proof** = perceived likelihood of achievement
+  - **Curiosity** = the vehicle / mechanism that makes the promise plausible
+  - **Constraints** = everything blocking them (not just time/effort — includes values, identity)
+  - **Conditions** = urgency, scarcity, guarantees, bonuses — supercharges everything above
+- **The Canyon/Helicopter metaphor:** Prospects are in Pain Land on one side of a canyon. Promised Land is on the other side. The helicopter is Curiosity (the mechanism). The pilot is Proof (they won't board without trust). Their baggage is Constraints (must be removed to board). The dynamite counting down is Conditions (urgency/scarcity).
+- **Sources:** copy-blocks-raw.txt
+
+---
+
 ## Complete Language Reference
 
 ### Signature Phrases [CORE] [domains: voice, universal]
@@ -507,6 +604,173 @@ The voice across all sources shares a distinct signature: casual authority (real
 
 ---
 
+## Headline Generation
+
+This section is the dedicated reference for generating high-converting headlines and headturners. It supplements — but does not replace — the "Headturner Is the Whole Game" principle in the Belief System section, the Headturner/Opener Tactics below, and the Headline Tactics below. Always weight the Headturner as the single most important element of any ad.
+
+---
+
+### Headline Templates & Fill-in-the-Blank Frameworks [RECURRING] [domains: headlines]
+
+**Core statement:** These are proven headline skeletons. Pick the template that best matches the offer's angle, then fill in the brackets with the user-provided inputs. Each template is a starting point — headlines can be shortened, lengthened, or remixed.
+
+**The 11 headline templates:**
+1. **`Get [VERB] To Get [RESULT]`** — Action-for-action exchange framing.
+2. **`This [TIME/ADDED BENEFIT] [MECHANISM] makes it EASY to [DREAM OUTCOME]`** — Frames the mechanism as the effort-dissolver.
+3. **`[Achieve Dream Outcome] Using [MECHANISM]`** — Simplest promise + mechanism pairing.
+4. **`Burn/Throw Away Your [THING THEY USE TO TRY AND GET RESULT]`** — Pattern-interrupt rejection of the old method. Verb-led, defiant.
+5. **`Kiss Goodbye to [THING THEY HATE] 😘`** (Zac signature variation) — Emotional release from a disliked state.
+6. **`My Entire [OFFER] for only [PRICE]`** — Direct offer statement. Works when price is unusually low vs. category.
+7. **`Take [TIME NEEDED] to [OUTCOME YOU PROVIDE]`** — Time-bound promise.
+8. **`[VERB] [MECHANISM]`** — Two-word commanding headline.
+9. **`How to [BIG BENEFIT/DESIRE]`** — Classic. Works in almost every market.
+10. **`[The Name of Your Offer]`** — The name alone as headline (only works when name is visual, curiosity-laden, or self-explanatory).
+11. **`[MECHANISM] [RESULT]`** — The named mechanism juxtaposed with what it does.
+
+**Real examples (verbatim from source — show these as style references, not as templates to reuse literally):**
+- "Launch a 'Black Friday' Micro Offer and Get Buyers In 72 Hours Flat"
+- "Get Paid to Get Presold Buyers 24/7 Without Wifi"
+- "Wave Goodbye to Freebee Seekers in 2024 👋"
+- "3 Buyers a Day"
+- "$11.90 = Wave Goodbye to Freebee Seekers 👋"
+- "This 3 Minute Subconscious Synchronization Exercise Triggers Instant Flow States"
+- "3 Minute Exercise Triggers Instant Flow States"
+- "Trigger Instant Flow States In Three Minutes Flat"
+- "Mid Ticket Workshops > Free Webinars"
+- "Flip a 'Dead' Audience Into Presold Clients"
+- "Purge Anxiety In 60 Seconds Flat"
+- "Get Paid to Create"
+- "60 Second Subconscious Rewire Routine Purges Anxiety"
+- "5 Minutes a Day = Peak Performance?"
+- "Purge Self Doubts & Limiting Beliefs With This Tweaked Hypnotic Formula"
+- "Don't Launch a Membership (Do This Instead)"
+- "Productized Offer Doc Sells Without Sales Calls"
+
+**Headline generation rules (reinforce existing rules, apply to all templates):**
+- Start with a verb when possible.
+- Outcome must be crystal clear from the headline alone.
+- Make it specific — numbers, mechanisms, timeframes beat vague claims.
+- Add "without [objection]" to neutralize the #1 resistance.
+- Run it through CRAVE (Clear, Relevant, Accurate, Visual, Expressive + Specific).
+- Does it contain at least one copy block (promise, proof, curiosity, or constraint dissolver)? Strong headlines contain 2–3.
+
+- **Sources:** headline-templates-raw.txt
+
+---
+
+### Power Words Reference [SINGLE] [domains: headlines, voice]
+
+**Core statement:** These are "hit harder" words for headlines, bullets, and CTAs. Use them to replace generic or weak language. Do not pile them on — one or two well-placed power words out-performs a sentence stuffed with them. Match the word's emotional register to the niche (a "blood and guts" word fits a sales-bro audience; it does not fit a wellness/mindfulness audience).
+
+**Urgency and Action Words**
+- *Immediate Action:* urgent, instantly, blast out, rip, blitz, take down, pounce, launch, shoot, grab, nail, seize, twist, right now, zero risk
+- *Movement and Force:* explosive, crush, dominate, bull charge, hit and run, dragged kicking and screaming, blast out of, heat up, neutralize, rout, eliminate
+
+**Emotional Trigger Words**
+- *Fear-Based:* nightmare, scared to death, threat, cruel fate, God's wrath, fatality, down and out, pain-ridden, blood and guts, afraid
+- *Desire and Fulfillment:* luxury, pleasure holiday, heart's content, cannot lose, love, desire, transform, Private Reserve, hot to know, hidden fortune
+- *Surprise and Amazement:* jaw-dropping, stunning, astonishing, head-shaking results, shock, amazingly obvious, breathtaking, wow, unbelievably devastating
+
+**Money and Success Words**
+- *Financial Gain:* jackpot, free money, cold cash, lucrative, rake in, fortune, filthy lucre, right off the top, double the usual amount, hidden assets
+- *Competitive Edge:* secret weapon, insider information, know where the bodies are buried, untapped resource, complete mastery, add an edge, you snooze you lose, bragging rights
+
+**Descriptive Power Words**
+- *Intensity Amplifiers:* white hot, firestorm, monster-size, gargantuan, massive, mega-valuable, super-hot, hardcore, over-the-top, dead solid perfect
+- *Vivid Imagery:* brand spanking new, wounded duck, dragged kicking and screaming, street-tough, lean and mean, blinding, thousand yard stare, through the back door, smile so hard your cheeks hurt
+- *Negative Characterizations:* lying bastards, lazy weasels, wimps and weasels, insufferable snobs, blithering, moron, snooty, butt ugly, completely lacking in credibility
+
+**Tactical Marketing Words**
+- *Exclusivity:* insider contacts who know the ropes, closed meeting, sought-after, Private Reserve, authorized, personally
+- *Persuasion Elements:* prove it, listen up, check it out, come clean, reveal, ensure, convince, handle it, deliver the goods
+
+**Usage notes:**
+- Power words amplify an existing copy block — they do not replace one. A headline made only of power words ("explosive jaw-dropping secret!") signals hype without substance.
+- Match the register to the voice. The Zac/Ben voice leans casual-confident, not blood-and-guts. Prefer words like: dead simple, just plain silly, seize, zero risk, untapped, secret weapon, reveal, transform, instantly, lean and mean.
+- Avoid hype words that are already blacklisted in Rule 7 (revolutionary, game-changing, etc.) — power words from this list are substitutes for those.
+
+- **Sources:** power-words-raw.txt
+
+---
+
+### Head Turner Frameworks [RECURRING] [domains: openers, headlines]
+
+**Core statement:** These frameworks govern the first line of an ad — the single highest-leverage element. Each framework is tagged Story or Direct. Story frameworks are used when the ad leads with empathy/narrative; Direct frameworks when the offer is stated up front. Test 5 different headturners on the same core ad — expect radically different results.
+
+**STORY HEAD TURNERS**
+
+**#1: The Client-Dialogue Life-or-Death Line**
+- *Pattern:* "[Life or death dialogue line gripping a viewer right into the story]" 👆 "This is a common theme I hear all the time from clients."
+- *Source:* Pull the quote from real audiences — Facebook groups, application forms, Reddit, book reviews.
+- *Examples:*
+  - "I have been struggling for over 6 years with panic attacks and PTSD trying literally every medication and therapy… which none has worked." 👆 "This is a common theme I hear from clients that have been suffering from PTSD and trauma for far too long."
+
+**#2: The Unique Mechanism Question**
+- *Pattern:* "Is this [unique mechanism] the easiest/fastest/simplest way to [achieve desired outcome / solve their core problem] without [thing they hate]?"
+- *Examples:*
+  - "Is this new '15 Minute Trauma Neutralizer Protocol' the easiest way to neutralize past traumatic experiences haunting the subconscious mind?"
+
+**#3: The Counter-Intuitive Belief Flip**
+- *Pattern:* "This may sound completely backwards... but the reason people constantly struggle to [achieve dream outcome] is because [common false belief]. Let me explain…"
+- *Use when:* The market has a dominant wrong belief that's keeping them stuck.
+
+**#4: The Turnaround Origin Story**
+- *Pattern:* "After [NEGATIVE STATE] in [SPECIFIC TIME PERIOD], I stopped [DRAINING ACTIVITY] and created [SOLUTION] that [WHAT THE SOLUTION UNLOCKS]. The result?"
+- *Examples:*
+  - "After burning out in the tail end of 2023, I stopped taking sales calls and created an easy yes Productized Offer that can be sold through a doc. The result?"
+
+**#5: The "I Hate" Pattern Interrupt**
+- *Pattern:* "I hate [COMMON SOLUTION IN THE MARKET] 👎 / [REASON WHY IT DOESN'T WORK FOR YOU OR CLIENTS] / And [SECONDARY NEGATIVE SIDE EFFECT] / So, I figured out a way to [VERB] [DREAM OUTCOME] using this dead simple [MECHANISM] 👇 👉LINK"
+- *Examples:*
+  - "I hate low ticket memberships under $100/month 👎 / Have no time for that with two kids… / And most people create them because they hear 'I can't afford it' one tooo many times. / So I figured out a way to stack PREMIUM recurring revenue using this dead simple one page offer doc 👇 👉LINK"
+
+**#6: The If/If/If Conditional Stack**
+- *Pattern:* "If [Wrong Action #1] is [RESULT CLIENTS WANT]…🙅‍♂️ / If [COMMON OBSTACLE KEEPS COMING UP]…😕 / If [CURRENT EXHAUSTING ACTIVITY] is causing you to [NEGATIVE EMOTIONAL RESPONSE]…🥲 / …see how myself and clients are using [MECHANISM] to get [RESULT] in [TIME FRAME/BENEFIT] 👇 👉[CALL TO ACTION]"
+- *Examples:*
+  - "If nobody in that flashy new Skool group is turning into a client…🙅‍♂️ / If the leads keep saying 'This is EXACTLY what I need! But…I can't afford it' 😕 / If free challenges are causing you to hide under your desk and cry from the energy drain… 🥲 / …I want to help you build a 'Micro Ecosystem' of presold buyers that ascend without needing a sales call. 👉LINK"
+
+**DIRECT HEAD TURNERS**
+
+**#1: The Here's-How-I Outcome Line**
+- *Pattern:* "Here's how I [achieve desirable outcome] in just [small time investment] (without [common pain point/obstacle]):"
+- *Examples:*
+  - "Here's how I get PAID to create courses:"
+
+**#2: The Install-This-Mechanism Command**
+- *Pattern:* "[ACTION VERB] this [MECHANISM] to [VERB] [RESULT]"
+- *Examples:*
+  - "Install this 3 minute subconscious synchronization exercise to trigger Instant Flow States."
+
+**#3: The If-I-Needed-To-Today Playbook**
+- *Pattern:* "If I needed/wanted to/had to help a client [GET OUTCOME] [TODAY/TOMORROW], this is exactly what I would do:"
+- *Examples:*
+  - "If I needed a cash injection TOMORROW, this is exactly what I would do:"
+
+**#4: The PRICE = WHAT THEY GET Equation**
+- *Pattern:* "[PRICE of offer] = [WHAT THEY GET] directly responsible for [PROOF]"
+- *Examples:*
+  - "$11.90 = All our internal agency templates to launch a low cost offer directly responsible for over 7 figures in sales."
+
+**#5: The Get-Our-Playbook Proof Line**
+- *Pattern:* "Get [sexy offer details] myself and clients use to [TANGIBLE RESULT]"
+- *Examples:*
+  - "Get our entire 7 figure Micro Offer playbook we used to semi-passively make $779 in sales on Christmas day while we danced around the tree."
+
+**#6: The Conditional Offer Line**
+- *Pattern:* "If you want my proven [MECHANISM] to [VERB] [RESULT]… …you can [get instant access/join me live] for just $[price]."
+- *Examples:*
+  - "If you want all our proven 7 figure templates to turn your expertise into a Micro Offer that semi-passively adds 15-30 pre-sold buyers a day to your list... ...you can get instant access for just $11.90 during our holiday special."
+
+**Head Turner generation rules:**
+- Before writing the headturner, decide: is this a Story Ad or a Direct Ad? Pick the framework list accordingly.
+- Pull dialogue lines from real audience language — don't invent them.
+- Each headturner should do at least one of: (1) pull the reader into their problem state, (2) make an offer and future-pace the result, (3) demonstrate an easy path forward.
+- Run the final headturner through CRAVE.
+
+- **Sources:** head-turner-raw.txt
+
+---
+
 ## Tactical Playbook
 
 ### Headturner / Opener Tactics [domains: openers, headlines]
@@ -680,6 +944,8 @@ Quick reference of what matters most for generation decisions.
 ### RECURRING Elements (2 sources — important, include when applicable)
 - Named Ad Templates — NHB System (ad type)
 - Fill-in-the-Blank Templates 1–5 (ad type)
+- Headline Templates & Fill-in-the-Blank Frameworks (11 templates — headline-templates-raw.txt + head-turner-raw.txt)
+- Head Turner Frameworks — Story + Direct (12 combined — head-turner-raw.txt + overlaps with Zac/NHB swipe files)
 - Root Cause Always Beats Symptom Masking (principle)
 - Failure Is Not the Prospect's Fault (principle)
 - Counter-Intuitive Insights Build Credibility (principle)
@@ -705,6 +971,15 @@ Quick reference of what matters most for generation decisions.
 - The "Last Resort" client story pattern
 
 ### SINGLE Elements (1 source — situational, use when context matches)
+- Copy Blocks Principles / P3C2 + Conditions (copy-blocks)
+- The Pain Chain / Pain Ladder (copy-blocks)
+- The Big Three Constraints — Money, Time, Effort (copy-blocks)
+- The CRAVE Quality Check (copy-blocks)
+- Proof Is Felt, Not Proven + 5 Proof Categories (copy-blocks)
+- Curiosity Thinking Tools — Epiphany Threshold, Intuition Pumps, Idea Caricature (copy-blocks)
+- The Copy Blocks Equation + Canyon/Helicopter Metaphor (copy-blocks)
+- Power Words Reference — categorized list (headlines)
+- "The Little Big Idea" — tie promise + constraints + curiosity (copy-blocks)
 - Belief Bridge Blueprint™ and all doctrine terminology (belief-engineering)
 - The Six Bricks / Six Categories of Beliefs (belief-engineering)
 - Belief Transition States: Closed → Receptive → Transformed (belief-engineering)
@@ -755,6 +1030,8 @@ Quick reference for filtering by domain.
 - **Ben Valen headline formulas** ("How To [Get Outcome]", "How To [Get Outcome] Without [Thing They Don't Want]", "The 'Secret' Way To [Get Outcome]")
 - **3 rules:** Start with a verb, clear outcome, short-not-too-long
 - **Tactics:** Dan Kennedy Classified Ad Test, add "without" extension, add "the thing" extension
+- **Full Headline Generation Section:** See `## Headline Generation` for the primary reference — 11 fill-in-the-blank templates with real examples, Power Words Reference (categorized), 12 Head Turner Frameworks (6 Story + 6 Direct) with fill-in-the-blank patterns and verbatim examples
+- **CRAVE quality check** for any headline: Clear, Relevant, Accurate, Visual, Expressive + Specific
 
 ### openers
 - **6 Story Ad Headturner types** (Headturner Swipe File — Zac)
@@ -816,6 +1093,14 @@ Quick reference for filtering by domain.
 - **Frameworks:** Two-Stage Prime & Build, Belief Bridge Blueprint™, Long-Form Evergreen Ad Framework
 - **Principles:** Preselling in the ad, headturner is the whole game, root cause beats symptom masking, failure is not the prospect's fault
 - **Language:** All CORE signature phrases apply universally across ad types
+
+### copy-blocks
+- **Framework:** P3C2 + Conditions — six blocks (Pain, Promise, Proof, Constraints, Curiosity, Conditions) that every piece of winning copy can be decomposed into.
+- **Operating principles:** Clarity is king; 80/20 science and art; throw away the ladder.
+- **Diagnostic tools:** Pain Chain (general → specific → cinematic → emotional → core wound), Promise Ladder (mirror of pain), Big Three Constraints (money/time/effort), Curiosity Quadrant, Copy Blocks Equation, Canyon/Helicopter metaphor.
+- **Strengthening tools:** CRAVE (Clear/Relevant/Accurate/Visual/Expressive+Specific), Epiphany Threshold (0–10 believability scale, aim 6–8), Intuition Pumps (natural/mechanical metaphors + strong associations), Idea Caricature (exaggerate the weird/taboo aspect).
+- **Proof categories (hard→easy to fake):** Experiential > Psychological > Empirical > Credible > Social.
+- **Usage principle:** When generating or auditing any copy — headline, body, CTA — silently scan for presence and strength of each copy block. Upgrade the weakest block.
 
 ---
 
@@ -1056,4 +1341,4 @@ Before delivering a generated ad, verify:
 ---
 
 *End of Master Pattern Library — Evergreen Ad Generator*
-*Built: 2026-04-20 | Sources: 4 | Next revision when new source extractions are added*
+*Built: 2026-04-20 | Sources: 8 | Next revision when new source extractions are added*

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { FRAMEWORKS, type FrameworkId } from "@/lib/prompt/frameworks";
+import { HEADLINES_MARKER } from "@/lib/prompt/headlines";
 import {
   Copy,
   RefreshCw,
@@ -35,28 +36,57 @@ type Props = {
   onBack: () => void;
 };
 
+type Split = { ad: string; headlines: string };
+
+/**
+ * Split the stream into { ad, headlines } on the sentinel marker.
+ * Robust to partial streams — if the marker hasn't arrived yet, headlines is "".
+ * Tolerates case variations in the marker ("<<<Headlines>>>" etc.)
+ */
+function splitOutput(raw: string): Split {
+  if (!raw) return { ad: "", headlines: "" };
+  const markerRe = new RegExp(
+    HEADLINES_MARKER.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+    "i",
+  );
+  const m = raw.match(markerRe);
+  if (!m || m.index === undefined) return { ad: raw, headlines: "" };
+  return {
+    ad: raw.slice(0, m.index).trim(),
+    headlines: raw.slice(m.index + m[0].length).trim(),
+  };
+}
+
+type CopyKey = "AD" | "HEADLINES" | "BOTH";
+
 export function AdOutput({ input, onStartOver, onBack }: Props) {
-  // `raw` is the live stream buffer. `ad` is the finalized (or user-edited) ad text
-  // that we render. When streaming, ad tracks raw. When user edits, ad diverges.
   const [raw, setRaw] = useState("");
+
+  // Finalized (possibly user-edited) text for each block. When streaming, these
+  // track the split of `raw`. When the user edits, they diverge from `raw`.
   const [ad, setAd] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
+  const [headlines, setHeadlines] = useState("");
+
+  const [isEditingAd, setIsEditingAd] = useState(false);
+  const [isEditingHeadlines, setIsEditingHeadlines] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<CopyKey | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
 
   const framework = FRAMEWORKS[input.framework];
   const busy = isStreaming || isRegenerating;
 
-  // Mirror stream buffer into the ad text (unless the user is hand-editing).
+  // Mirror stream buffer into the two rendered blocks unless the user is editing.
   useEffect(() => {
-    if (!isEditing) setAd(raw);
-  }, [raw, isEditing]);
+    const s = splitOutput(raw);
+    if (!isEditingAd) setAd(s.ad);
+    if (!isEditingHeadlines) setHeadlines(s.headlines);
+  }, [raw, isEditingAd, isEditingHeadlines]);
 
-  // Elapsed-time counter while we're waiting on Claude.
+  // Elapsed-time counter during any in-flight stream.
   useEffect(() => {
     if (!busy) return;
     const startedAt = Date.now();
@@ -75,7 +105,9 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
     setError(null);
     setRaw("");
     setAd("");
-    setIsEditing(false);
+    setHeadlines("");
+    setIsEditingAd(false);
+    setIsEditingHeadlines(false);
 
     const ctrl = new AbortController();
     abortRef.current = ctrl;
@@ -97,7 +129,7 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
                 `${(i.path ?? []).join(".") || "?"}: ${i.message ?? "invalid"}`,
             )
             .join(" · ");
-          throw new Error(`Validation failed — ${details}`);
+          throw new Error(`Validation failed. ${details}`);
         }
         throw new Error(
           j.message || j.error || `Request failed (${res.status})`,
@@ -122,7 +154,7 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
 
       if (!acc.trim()) {
         throw new Error(
-          "No content was generated — the request may have timed out. Retry or trim very large inputs.",
+          "No content was generated. The request may have timed out. Retry or trim very large inputs.",
         );
       }
     } catch (err) {
@@ -139,11 +171,12 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
     await runStream("/api/generate", input, () => setIsStreaming(false));
   }
 
-  async function regenerateAd() {
+  async function regenerateAll() {
     setIsRegenerating(true);
+    const previous = [ad, HEADLINES_MARKER, headlines].filter(Boolean).join("\n\n");
     await runStream(
       "/api/regenerate",
-      { ...input, previousVersion: ad },
+      { ...input, previousVersion: previous },
       () => setIsRegenerating(false),
     );
   }
@@ -155,22 +188,24 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
     setError("Generation cancelled.");
   }
 
-  // Kick off first generation on mount.
   useEffect(() => {
     streamGenerate();
     return () => abortRef.current?.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function copyAd() {
-    if (!ad) return;
-    navigator.clipboard.writeText(ad).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+  function copyText(text: string, key: CopyKey) {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(key);
+      setTimeout(() => setCopied(null), 1500);
     });
   }
 
   const busyLabel = isRegenerating ? "Regenerating" : "Generating";
+  const bothText = [ad, headlines && `\n\n--- 20 Headlines ---\n\n${headlines}`]
+    .filter(Boolean)
+    .join("");
 
   return (
     <div className="w-full max-w-2xl space-y-4">
@@ -199,23 +234,11 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            type="button"
-            disabled={busy}
-          >
+          <Button variant="ghost" size="sm" onClick={onBack} type="button" disabled={busy}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Edit inputs
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onStartOver}
-            type="button"
-            disabled={busy}
-          >
+          <Button variant="ghost" size="sm" onClick={onStartOver} type="button" disabled={busy}>
             <RotateCcw className="mr-2 h-4 w-4" />
             Start over
           </Button>
@@ -253,6 +276,7 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
         </Card>
       )}
 
+      {/* ===== AD BLOCK ===== */}
       <Card className="overflow-hidden">
         <CardContent className="space-y-3 p-4">
           <div className="flex items-center justify-between gap-2">
@@ -264,37 +288,35 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
                 variant="ghost"
                 size="sm"
                 className="h-7 px-2 text-xs"
-                onClick={() => setIsEditing((v) => !v)}
+                onClick={() => setIsEditingAd((v) => !v)}
                 disabled={busy || !ad}
                 type="button"
               >
                 <Pencil className="mr-1 h-3 w-3" />
-                {isEditing ? "Done" : "Edit"}
+                {isEditingAd ? "Done" : "Edit"}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-7 px-2 text-xs"
-                onClick={copyAd}
+                onClick={() => copyText(ad, "AD")}
                 disabled={!ad || busy}
                 type="button"
               >
-                {copied ? (
+                {copied === "AD" ? (
                   <>
-                    <Check className="mr-1 h-3 w-3" />
-                    Copied
+                    <Check className="mr-1 h-3 w-3" /> Copied
                   </>
                 ) : (
                   <>
-                    <Copy className="mr-1 h-3 w-3" />
-                    Copy
+                    <Copy className="mr-1 h-3 w-3" /> Copy
                   </>
                 )}
               </Button>
             </div>
           </div>
 
-          {isEditing ? (
+          {isEditingAd ? (
             <Textarea
               value={ad}
               onChange={(e) => setAd(e.target.value)}
@@ -309,26 +331,86 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
         </CardContent>
       </Card>
 
+      {/* ===== HEADLINES BLOCK ===== */}
+      <Card className="overflow-hidden">
+        <CardContent className="space-y-3 p-4">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              20 Headlines (5 short · 5 longer · 5 power-word · 5 polarizing)
+            </span>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => setIsEditingHeadlines((v) => !v)}
+                disabled={busy || !headlines}
+                type="button"
+              >
+                <Pencil className="mr-1 h-3 w-3" />
+                {isEditingHeadlines ? "Done" : "Edit"}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => copyText(headlines, "HEADLINES")}
+                disabled={!headlines || busy}
+                type="button"
+              >
+                {copied === "HEADLINES" ? (
+                  <>
+                    <Check className="mr-1 h-3 w-3" /> Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="mr-1 h-3 w-3" /> Copy
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {isEditingHeadlines ? (
+            <Textarea
+              value={headlines}
+              onChange={(e) => setHeadlines(e.target.value)}
+              rows={Math.max(24, headlines.split("\n").length + 2)}
+              className="text-sm leading-relaxed font-mono"
+            />
+          ) : (
+            <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed min-h-[8rem]">
+              {headlines ||
+                (busy
+                  ? "Headlines will appear here once the ad finishes streaming…"
+                  : "")}
+            </pre>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="flex items-center justify-between gap-3 pt-2 flex-wrap">
         <Button
           variant="outline"
-          onClick={regenerateAd}
-          disabled={busy || !ad}
+          onClick={regenerateAll}
+          disabled={busy || (!ad && !headlines)}
           type="button"
         >
           <Sparkles className="mr-2 h-4 w-4" />
           Regenerate (new angle)
         </Button>
-        <Button onClick={copyAd} disabled={!ad || busy} type="button">
-          {copied ? (
+        <Button
+          onClick={() => copyText(bothText, "BOTH")}
+          disabled={(!ad && !headlines) || busy}
+          type="button"
+        >
+          {copied === "BOTH" ? (
             <>
-              <Check className="mr-2 h-4 w-4" />
-              Copied
+              <Check className="mr-2 h-4 w-4" /> Copied
             </>
           ) : (
             <>
-              <Copy className="mr-2 h-4 w-4" />
-              Copy full ad
+              <Copy className="mr-2 h-4 w-4" /> Copy ad + headlines
             </>
           )}
         </Button>
