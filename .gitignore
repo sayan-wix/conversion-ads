@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# auto-generated from content/pattern-library.md (rebuilt on predev/prebuild)
+/src/lib/generated/

@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Conversion Ads
 
-## Getting Started
+A web app that generates Meta-ready evergreen ad copy in the voice of Zac / Ben Valen,
+grounded in a 1,059-line master pattern library. Never fabricates proof. Never uses
+AI-slop phrases.
 
-First, run the development server:
+## Quickstart
 
 ```bash
+cp .env.example .env.local
+# edit .env.local and set ANTHROPIC_API_KEY
+
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# → http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## How it works
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. User fills a 6-step wizard (product, audience, promise, mechanism, proof, CTA).
+2. Picks one of 5 frameworks: Client Story, Belief Shifter, Why/What/How, Direct/Short, Problem/Solution Story.
+3. `/api/generate` calls the Anthropic API (Sonnet 4.6 by default) with:
+   - **Cached system prompt**: pattern library + hard guardrails (~95KB, stable)
+   - **Dynamic system block**: the chosen framework's directives
+   - **User message**: wizard inputs in `<product>`, `<audience>`, etc. tags
+4. Response streams back live. Each section (`[HOOK]` / `[BODY]` / `[PROOF]` / `[CTA]`) can be edited inline or regenerated individually.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Architecture
 
-## Learn More
+See [`CLAUDE.md`](./CLAUDE.md) for full architecture docs, key files, and the Mistakes List.
 
-To learn more about Next.js, take a look at the following resources:
+## Deployment (Vercel)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Push this repo to GitHub.
+2. Import into Vercel.
+3. Set environment variables in the Vercel dashboard:
+   - `ANTHROPIC_API_KEY` *(required)*
+   - `ANTHROPIC_MODEL` *(optional, defaults to `claude-sonnet-4-6`)*
+   - `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` *(recommended for prod)*
+4. Deploy. That's it.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Re-ingesting new source documents
 
-## Deploy on Vercel
+Drop a new PDF/docx of ad frameworks into the parent folder, then:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# With Claude Code CLI at the project root:
+claude /source-preprocessor
+claude /knowledge-extractor
+claude /pattern-library-builder
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Then in conversion-ads/:
+cp ../_preprocessed/pattern-library.md content/pattern-library.md
+npm run build  # auto-regenerates the embedded TS version
+git commit -am "content: refresh pattern library"
+git push       # Vercel auto-deploys
+```
+
+## Tech
+
+Next.js 16 · TypeScript · Tailwind 4 · shadcn/ui · Anthropic SDK · Upstash Ratelimit · Zod
