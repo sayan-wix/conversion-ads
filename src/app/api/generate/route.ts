@@ -62,8 +62,10 @@ export async function POST(req: Request) {
   const userMessage = buildUserMessage(input);
 
   // 4. Stream from Anthropic
-  // Adaptive thinking on Sonnet 4.6 / Opus 4.6 / Opus 4.7 — but DO NOT send temperature etc on Opus 4.7
-  const isOpus47 = MODEL.startsWith("claude-opus-4-7");
+  // When adaptive thinking is on (Sonnet 4.6, Opus 4.6, Opus 4.7) the API rejects
+  // `temperature` values other than 1 — so omit it entirely in that case. Only send
+  // a custom temperature on older models that don't use adaptive thinking.
+  const adaptive = supportsAdaptiveThinking(MODEL);
   const params: Parameters<typeof anthropic.messages.stream>[0] = {
     model: MODEL,
     // 4096 gives adaptive thinking room to "think" without starving the final
@@ -73,9 +75,7 @@ export async function POST(req: Request) {
     // biome-ignore lint/suspicious/noExplicitAny: SDK accepts structured blocks
     system: systemBlocks as any,
     messages: [{ role: "user", content: userMessage }],
-    ...(supportsAdaptiveThinking(MODEL) ? { thinking: { type: "adaptive" } } : {}),
-    // Only send temperature on older models (not Opus 4.7 — it 400s)
-    ...(isOpus47 ? {} : { temperature: 0.9 }),
+    ...(adaptive ? { thinking: { type: "adaptive" } } : { temperature: 0.9 }),
   };
 
   const encoder = new TextEncoder();

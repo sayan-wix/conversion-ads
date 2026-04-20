@@ -38,15 +38,16 @@ export async function POST(req: Request) {
   const systemBlocks = buildSystemBlocks(rest.framework);
   const userMessage = buildRegenerateMessage(rest, section, previousVersion);
 
-  const isOpus47 = MODEL.startsWith("claude-opus-4-7");
+  // Adaptive thinking forbids custom temperature. Only send a temperature when
+  // the model doesn't support adaptive thinking.
+  const adaptive = supportsAdaptiveThinking(MODEL);
   const params: Parameters<typeof anthropic.messages.stream>[0] = {
     model: MODEL,
-    max_tokens: 1024,
+    max_tokens: 2048,
     // biome-ignore lint/suspicious/noExplicitAny: SDK accepts structured blocks
     system: systemBlocks as any,
     messages: [{ role: "user", content: userMessage }],
-    ...(supportsAdaptiveThinking(MODEL) ? { thinking: { type: "adaptive" } } : {}),
-    ...(isOpus47 ? {} : { temperature: 0.95 }),
+    ...(adaptive ? { thinking: { type: "adaptive" } } : { temperature: 0.95 }),
   };
 
   const encoder = new TextEncoder();
