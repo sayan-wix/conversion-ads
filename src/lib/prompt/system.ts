@@ -32,10 +32,21 @@ export function buildSystemBlocks(framework: FrameworkId): SystemBlock[] {
 
   const preamble = `You are an elite direct-response copywriter generating Meta-ready evergreen ads.
 You have been trained on a master pattern library of proven ad frameworks (below).
-Your job: produce ONE complete ad that follows the chosen framework, matches the voice
-signals in the library, and obeys the guardrails below.
+Your job: produce ONE complete, flowing ad that follows the chosen framework, matches
+the voice signals in the library, and obeys the guardrails below.
 
-You do NOT invent facts, numbers, or testimonials. You work with what the user gives you.`;
+The output is a single continuous Meta ad — no section headers, no [HOOK]/[BODY]/
+[PROOF]/[CTA] markers, no labels. Weave the hook, body, proof (if supplied), and
+call-to-action naturally into the shape the chosen framework calls for.
+
+The user's inputs under <product>, <audience>, <promise>, <mechanism>, and <proof>
+may be long reference documents (10–40 pages). Treat them as source knowledge to
+pull from — NOT as material to paraphrase or repeat. Use your judgment: extract only
+what strengthens the ad for the chosen framework. The best ads leave 90% of the
+source material on the cutting room floor.
+
+You do NOT invent facts, numbers, or testimonials. You work with what the user gives
+you. If <proof> is empty, the ad stands without specific proof — never fabricate it.`;
 
   const patternBlock = `# PATTERN LIBRARY (your source of truth)\n\n${library}`;
 
@@ -74,21 +85,22 @@ export function buildUserMessage(input: WizardInput): string {
     proofBlock,
     `<cta>\n${input.cta.trim()}\n</cta>`,
     "",
-    "Output ONLY the ad, using the [HOOK] / [BODY] / [PROOF] / [CTA] section markers.",
+    "Output ONLY the ad copy itself — one continuous, flowing piece of writing.",
+    "No section headers, no labels, no markers. Just the ad.",
   ].join("\n");
 }
 
 /**
- * Build a regenerate-single-section user message. Reuses the same system prompt.
+ * Build a regenerate-whole-ad user message. Reuses the same system prompt and
+ * asks Claude to produce a meaningfully different angle / opening / beats than
+ * the previous version (if supplied).
  */
 export function buildRegenerateMessage(
   input: WizardInput,
-  section: "hook" | "body" | "proof" | "cta",
   previousVersion?: string,
 ): string {
   const base = buildUserMessage(input);
-  const prev = previousVersion?.trim()
-    ? `\n\nThe previous version of the [${section.toUpperCase()}] section was:\n"""\n${previousVersion.trim()}\n"""\nWrite a meaningfully DIFFERENT version — new angle, new opening line, or new beats.`
-    : "";
-  return `${base}\n\nONLY regenerate the [${section.toUpperCase()}] section. Return ONLY that section with its marker, not the full ad.${prev}`;
+  if (!previousVersion?.trim()) return base;
+
+  return `${base}\n\nThe previous version of this ad was:\n"""\n${previousVersion.trim()}\n"""\n\nWrite a meaningfully DIFFERENT version — new opening line, new angle into the mechanism, new beats. Do not repeat the same hook or structure. Same framework, same inputs, fresh execution.`;
 }

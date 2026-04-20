@@ -42,9 +42,8 @@ export const WizardInputSchema = z.object({
 
 export type WizardInput = z.infer<typeof WizardInputSchema>;
 
-/** Regenerate a single section */
+/** Regenerate the whole ad, optionally referencing a previous version to differ from */
 export const RegenerateInputSchema = WizardInputSchema.extend({
-  section: z.enum(["hook", "body", "proof", "cta"]),
   previousVersion: z.string().optional(),
 });
 

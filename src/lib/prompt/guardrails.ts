@@ -82,16 +82,9 @@ studies show, research proves, scientifically proven, clinically proven,
 - Return ONLY the ad copy. No preamble like "Here's your ad:" or "Sure, here you go:".
 - No meta-commentary about the ad at the end.
 - Use plain text suitable for Meta Ads Manager. Line breaks and emoji OK.
-- Structure the output with these exact section markers on their own lines so the UI can
-  split them:
-    [HOOK]
-    ...hook text...
-    [BODY]
-    ...body text...
-    [PROOF]
-    ...proof text (or the word "SKIP" if <proof> was empty)...
-    [CTA]
-    ...cta text...
+- Output ONE continuous piece of ad copy — no section headers, no labels, no
+  [HOOK]/[BODY]/[PROOF]/[CTA] markers. The hook, body, proof (if supplied), and
+  call-to-action should flow naturally in the order the chosen framework calls for.
 `.trim();
 
 /**

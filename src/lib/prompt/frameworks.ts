@@ -1,11 +1,10 @@
 /**
- * Framework-specific directives. Each framework entry describes:
- * - the structural skeleton the model must follow
- * - the opening style
- * - pattern-library sections the model should lean on
+ * Framework-specific directives. Each framework entry describes the structural
+ * beats the model must hit, in plain prose — NOT as labeled sections.
  *
- * These strings get injected as a DYNAMIC block in the system prompt
- * (after the CACHED pattern library + guardrails).
+ * The output is ONE flowing Meta-ready ad. No [HOOK]/[BODY]/[PROOF]/[CTA]
+ * markers appear in the final text; the elements are woven naturally in
+ * whatever sequence the framework calls for.
  */
 
 export type FrameworkId =
@@ -34,17 +33,21 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
     instructions: `
 Use the CLIENT STORY framework from the pattern library.
 
-Structure:
-1. [HOOK] — One-line result statement naming the client and the outcome ONLY if the user
-   supplied it under <proof>. If <proof> is empty, DO NOT use this framework — write a
-   [HOOK] line saying "[PROOF MISSING — pick a different framework]" and stop.
-2. [BODY] — Backstory: where the client was before. What they had tried. Why nothing worked.
-   Then the turning point (the mechanism from <mechanism>). Then the outcome, using only
-   numbers the user provided.
-3. [PROOF] — Paraphrase the user's <proof> verbatim. No invention.
-4. [CTA] — Use the user's <cta> verbatim or tightened by one edit.
+REQUIREMENT: This framework needs real <proof>. If <proof> is empty, write a
+single sentence telling the user to either add proof or pick a different
+framework — and stop. Do NOT invent a client story.
 
-Opening pattern: "[Name] came to me [time period] ago [state of problem]."
+Flow (weave as one piece of copy, no section labels):
+- Open with a one-line result statement naming the client and the outcome, taken
+  VERBATIM from what the user supplied under <proof>.
+- Backstory beat: where the client was before. What they had tried. Why nothing
+  worked.
+- Turning-point beat: introduce <mechanism> as the thing that changed it.
+- Outcome beat: what the result looked like, using only numbers the user gave.
+- Paraphrase the rest of <proof> as confirmation — no invention.
+- End with <cta>, verbatim or tightened by one edit.
+
+Opening line pattern: "[Name] came to me [time period] ago [state of problem]."
 `.trim(),
   },
 
@@ -55,21 +58,23 @@ Opening pattern: "[Name] came to me [time period] ago [state of problem]."
     bestFor: "When the audience is stuck because of a wrong assumption about the problem.",
     lengthHint: "Medium (200–350 words).",
     instructions: `
-Use the BELIEF SHIFTER framework from the pattern library (Ben Valen's Belief Shifter +
-the Belief Bridge Blueprint doctrine).
+Use the BELIEF SHIFTER framework from the pattern library (Ben Valen's Belief
+Shifter + the Belief Bridge Blueprint doctrine).
 
-Structure:
-1. [HOOK] — A misconception question or a belief-break opener. Examples:
-   - "If [audience], stop [thing they think works]."
-   - "The biggest misconception about [problem] is [wrong belief]."
-   - "You don't [problem] because [wrong reason they believe]. You [problem] because [real reason]."
-2. [BODY] — State the OLD belief they hold. Explain why it keeps them stuck. Introduce
-   the NEW belief (rooted in <mechanism>). Paint the bridge from old to new.
-3. [PROOF] — If <proof> supplied, weave it in as confirmation of the new belief. If empty,
-   skip this block (write "SKIP" on the PROOF line).
-4. [CTA] — Frame the CTA as "the next step on the new belief path."
-
-The hook MUST break a belief, not describe a feature or outcome.
+Flow (one continuous piece of copy, no section labels):
+- Open with a belief-break line. MUST break a belief, not describe a feature.
+  Examples:
+    "If [audience], stop [thing they think works]."
+    "The biggest misconception about [problem] is [wrong belief]."
+    "You don't [problem] because [wrong reason they believe]. You [problem]
+     because [real reason]."
+- State the OLD belief the prospect holds. Explain why it keeps them stuck.
+- Introduce the NEW belief rooted in <mechanism>.
+- Paint the bridge from old to new — why the new belief actually explains what
+  they've been experiencing.
+- If <proof> is supplied, weave it in as confirmation of the new belief. If
+  empty, skip — do NOT invent proof.
+- Close with <cta>, framed as "the next step on the new belief path."
 `.trim(),
   },
 
@@ -82,16 +87,14 @@ The hook MUST break a belief, not describe a feature or outcome.
     instructions: `
 Use the WHY / WHAT / HOW framework.
 
-Structure:
-1. [HOOK] — A "why now" line. The shift, trend, or reason this matters today.
-2. [BODY] — Three explicit beats:
-   - WHY: Why the old way is failing the audience (from <audience> + their pains).
-   - WHAT: What <product> actually is, in one plain sentence.
-   - HOW: How <mechanism> produces <promise>. Concrete steps or principles.
-3. [PROOF] — User's <proof> if present, else "SKIP".
-4. [CTA] — Direct, action-oriented. Use <cta> verbatim.
-
-Do NOT label the sections "WHY:", "WHAT:", "HOW:" in the output — flow them naturally.
+Flow (one continuous ad, no section labels, do NOT write the words "WHY:",
+"WHAT:", "HOW:" in the output):
+- Open with a "why now" line: the shift, trend, or reason this matters today.
+- WHY beat: why the old way is failing the audience (pull from <audience>).
+- WHAT beat: what <product> actually is, in one plain sentence.
+- HOW beat: how <mechanism> produces <promise>. Concrete steps or principles.
+- If <proof> is present, fold one line of it in naturally. If empty, skip.
+- Close with <cta>, verbatim.
 `.trim(),
   },
 
@@ -104,13 +107,12 @@ Do NOT label the sections "WHY:", "WHAT:", "HOW:" in the output — flow them na
     instructions: `
 Use the DIRECT / SHORT AD framework (Zac's Direct Ad variations).
 
-Structure:
-1. [HOOK] — Offer-stated-plainly. One line. E.g., "[Product] for [audience] who want [promise]."
-2. [BODY] — 2–3 short lines. What's inside. Who it's for. Not for.
-3. [PROOF] — One line if <proof> exists. Else "SKIP".
-4. [CTA] — One line. Verb-first. Use <cta> verbatim.
-
-Hard length cap: the four sections combined must not exceed 120 words.
+Flow (ONE short ad, no section labels, hard cap 120 words total):
+- Open with the offer stated plainly, one line:
+  "[Product] for [audience] who want [promise]."
+- 2–3 short lines: what's inside, who it's for, who it's not for.
+- If <proof> exists, one line of it. If empty, skip.
+- Close with <cta>, verb-first, verbatim.
 `.trim(),
   },
 
@@ -121,19 +123,22 @@ Hard length cap: the four sections combined must not exceed 120 words.
     bestFor: "Cold audiences. When the pain is well-understood but solutions feel broken.",
     lengthHint: "Long (300–500 words).",
     instructions: `
-Use the PROBLEM / SOLUTION STORY framework (hybrid of Zac's Story Ads + Ben's Hate/Story).
+Use the PROBLEM / SOLUTION STORY framework (hybrid of Zac's Story Ads + Ben's
+Hate/Story).
 
-Structure:
-1. [HOOK] — A visceral snapshot of the pain. Written in the prospect's internal voice.
-   Examples: "It's 3am and you're still awake, scrolling…" / "You open the closet and nothing fits."
-2. [BODY] — Three beats:
-   - The trap: why the common solutions have failed them.
-   - The turn: the moment things can be different — introduce <mechanism>.
-   - The after: what life looks like when <promise> is real.
-3. [PROOF] — User's <proof> if present, else "SKIP".
-4. [CTA] — Soft bridge into action. Use <cta>.
+Flow (one continuous ad, no section labels — this is a story, not a sales page):
+- Open with a visceral snapshot of the pain, written in the prospect's internal
+  voice. Examples:
+    "It's 3am and you're still awake, scrolling…"
+    "You open the closet and nothing fits."
+- The trap beat: why the common solutions have failed them.
+- The turn beat: the moment things can be different — introduce <mechanism>.
+- The after beat: what life looks like when <promise> is real.
+- If <proof> is present, weave it in as evidence the "after" is possible. If
+  empty, skip.
+- Close with <cta> as a soft bridge into action.
 
-Do NOT sound like a sales page. This is a story that happens to have an offer at the end.
+Do NOT sound like a sales page.
 `.trim(),
   },
 };

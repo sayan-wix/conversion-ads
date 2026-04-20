@@ -36,9 +36,9 @@ export async function POST(req: Request) {
     );
   }
 
-  const { section, previousVersion, ...rest } = parsed.data;
+  const { previousVersion, ...rest } = parsed.data;
   const systemBlocks = buildSystemBlocks(rest.framework);
-  const userMessage = buildRegenerateMessage(rest, section, previousVersion);
+  const userMessage = buildRegenerateMessage(rest, previousVersion);
 
   // Adaptive thinking forbids custom temperature. Only send a temperature when
   // the model doesn't support adaptive thinking.
