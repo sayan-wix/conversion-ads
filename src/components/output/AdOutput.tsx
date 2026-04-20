@@ -119,6 +119,16 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
 
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
+        // If validation failed, zod issues come back — format them readably
+        if (j.error === "invalid_input" && Array.isArray(j.issues)) {
+          const details = j.issues
+            .map(
+              (i: { path?: (string | number)[]; message?: string }) =>
+                `${(i.path ?? []).join(".") || "?"}: ${i.message ?? "invalid"}`,
+            )
+            .join(" · ");
+          throw new Error(`Validation failed — ${details}`);
+        }
         throw new Error(
           j.message || j.error || `Generation failed (${res.status})`,
         );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +10,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { FrameworkPicker } from "./FrameworkPicker";
 import { AdOutput } from "@/components/output/AdOutput";
 import type { FrameworkId } from "@/lib/prompt/frameworks";
-import { ArrowRight, ArrowLeft, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowLeft,
+  Sparkles,
+  Paperclip,
+  Loader2,
+  AlertTriangle,
+} from "lucide-react";
 
 type WizardState = {
   product: string;
@@ -32,12 +39,16 @@ const EMPTY: WizardState = {
   framework: null,
 };
 
+type TextKey = Exclude<keyof WizardState, "framework">;
+
 type Step = {
-  key: keyof Omit<WizardState, "framework"> | "framework";
+  key: TextKey | "framework";
   title: string;
   sub: string;
   placeholder?: string;
   multiline?: boolean;
+  allowFileUpload?: boolean;
+  rows?: number;
   optional?: boolean;
 };
 
@@ -45,51 +56,65 @@ const STEPS: Step[] = [
   {
     key: "product",
     title: "What is your product or offer?",
-    sub: "Be specific. Name it, name the delivery format, name the duration if it has one.",
-    placeholder: "e.g., 90-day online fitness coaching for men 40+ — weekly calls + custom plan",
+    sub: "Name it, describe the format, duration, and what's included. Paste a full offer brief or attach a file if you have one.",
+    placeholder:
+      "e.g., 90-day online fitness coaching for men 40+ — weekly 1:1 calls, custom nutrition plan, private community, 3 workout protocols to rotate through…",
     multiline: true,
+    allowFileUpload: true,
+    rows: 10,
   },
   {
     key: "audience",
-    title: "Who is this for?",
-    sub: "One tight sentence. Demographics + their current state or pain.",
-    placeholder: "e.g., Men 40-55 who've tried every diet and nothing sticks anymore",
+    title: "Who is this for? (your avatar)",
+    sub: "Demographics, psychographics, pain points, what they've tried, what they secretly believe. The more detail, the sharper the ad. Paste or attach your full avatar document.",
+    placeholder:
+      "e.g., Men 40-55, married with kids, desk jobs, $100K+ household income. They've tried keto, intermittent fasting, CrossFit — everything works for 3 weeks then falls apart. Privately terrified of becoming 'the dad who let himself go.' Believe discipline is the problem when it's actually environment…",
     multiline: true,
+    allowFileUpload: true,
+    rows: 14,
   },
   {
     key: "promise",
     title: "What is the big promise?",
-    sub: "The outcome they get. Make it vivid and specific, not vague.",
-    placeholder: "e.g., Lose 20 lbs in 90 days without giving up beer or living at the gym",
+    sub: "The specific outcome they get. Vivid, measurable, time-bound when possible.",
+    placeholder:
+      "e.g., Lose 20 lbs in 90 days without giving up beer, living at the gym, or cooking separately from your family",
     multiline: true,
+    allowFileUpload: true,
+    rows: 6,
   },
   {
     key: "mechanism",
-    title: "How does it work? (Your mechanism)",
-    sub: "The unique thing that makes it work. Your angle, method, or process.",
+    title: "How does it work? (your mechanism)",
+    sub: "The unique thing that makes the outcome happen. Your method, framework, angle, process. Attach your full mechanism document — the more depth, the better the ad can reference it accurately.",
     placeholder:
-      "e.g., Metabolic cycling — eat more 4 days/week, less 3 days, resets fat-burning pathways older men lose",
+      "e.g., Metabolic cycling — structured eating windows that rotate high- and low-carb days across a 7-day loop. Reset the leptin/ghrelin axis older men lose after 40. Phase 1 (weeks 1-3)… Phase 2 (weeks 4-8)… Phase 3 (weeks 9-12)…",
     multiline: true,
+    allowFileUpload: true,
+    rows: 16,
   },
   {
     key: "proof",
     title: "Real proof you can reference (optional)",
-    sub: "Client stories, results, testimonials — anything REAL. Leave blank if none. The ad will never fabricate proof.",
+    sub: "Client wins, case studies, testimonials, numbers — anything REAL. Leave blank if none. The ad will NEVER fabricate proof or invent client names.",
     placeholder:
-      "e.g., Marcus, 48, lost 22 lbs in 11 weeks. Or: 'I've coached 200+ men through this program over 3 years.'",
+      "e.g., Marcus, 48, CFO, lost 22 lbs in 11 weeks and kept it off for 8 months. Said: 'First program I didn't quit by week 4.' Or: '200+ men through this program over 3 years — avg 14 lbs lost.'",
     multiline: true,
+    allowFileUpload: true,
+    rows: 12,
     optional: true,
   },
   {
     key: "cta",
     title: "What do you want them to do?",
-    sub: "The call to action. Concrete and immediate.",
+    sub: "The call to action. Concrete, immediate, low-friction.",
     placeholder: "e.g., Book a free 20-minute strategy call",
+    multiline: false,
   },
   {
     key: "framework",
     title: "Pick your ad framework",
-    sub: "Different frameworks work better for different audiences and offers. Pick one.",
+    sub: "Different frameworks work better for different audiences and offers. Pick one to generate now — you can come back and try another.",
   },
 ];
 
@@ -97,6 +122,9 @@ export function Wizard() {
   const [state, setState] = useState<WizardState>(EMPTY);
   const [stepIdx, setStepIdx] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [uploading, setUploading] = useState<TextKey | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const step = STEPS[stepIdx];
   const isLast = stepIdx === STEPS.length - 1;
@@ -109,7 +137,7 @@ export function Wizard() {
     ? true
     : step.key === "framework"
       ? state.framework !== null
-      : typeof currentValue === "string" && currentValue.trim().length >= 3;
+      : typeof currentValue === "string" && currentValue.trim().length >= 2;
 
   function setField<K extends keyof WizardState>(k: K, v: WizardState[K]) {
     setState((s) => ({ ...s, [k]: v }));
@@ -137,6 +165,39 @@ export function Wizard() {
     setSubmitted(false);
   }
 
+  async function handleFileUpload(
+    key: TextKey,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(key);
+    setUploadError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/extract", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || data.error || `Upload failed (${res.status})`);
+      }
+      const newText = data.text as string;
+      setState((s) => {
+        const existing = s[key];
+        const joiner = existing && existing.trim() ? "\n\n" : "";
+        return { ...s, [key]: existing + joiner + newText };
+      });
+    } catch (err) {
+      setUploadError((err as Error).message);
+    } finally {
+      setUploading(null);
+      // reset file input so same file can be re-uploaded if needed
+      if (fileInputRefs.current[key]) {
+        fileInputRefs.current[key]!.value = "";
+      }
+    }
+  }
+
   if (submitted && state.framework) {
     return (
       <AdOutput
@@ -155,8 +216,11 @@ export function Wizard() {
     );
   }
 
+  const textValue = step.key !== "framework" ? state[step.key as TextKey] : "";
+  const charCount = typeof textValue === "string" ? textValue.length : 0;
+
   return (
-    <Card className="w-full max-w-2xl shadow-sm">
+    <Card className="w-full max-w-3xl shadow-sm">
       <CardHeader className="space-y-3">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>
@@ -168,7 +232,7 @@ export function Wizard() {
         </div>
         <Progress value={progress} className="h-1" />
         <CardTitle className="text-2xl">{step.title}</CardTitle>
-        <CardDescription>{step.sub}</CardDescription>
+        <CardDescription className="text-base">{step.sub}</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-5">
@@ -184,13 +248,67 @@ export function Wizard() {
             </Label>
             <Textarea
               id={step.key}
-              value={state[step.key] as string}
-              onChange={(e) => setField(step.key as keyof WizardState, e.target.value)}
+              value={state[step.key as TextKey]}
+              onChange={(e) =>
+                setField(step.key as TextKey, e.target.value)
+              }
               placeholder={step.placeholder}
-              rows={4}
+              rows={step.rows ?? 10}
               autoFocus
-              className="text-base"
+              className="text-base font-normal leading-relaxed resize-y min-h-[12rem] max-h-[70vh]"
             />
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              {step.allowFileUpload ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={(el) => {
+                      fileInputRefs.current[step.key] = el;
+                    }}
+                    type="file"
+                    accept=".txt,.md,.markdown,.docx,.pdf"
+                    className="hidden"
+                    onChange={(e) =>
+                      handleFileUpload(step.key as TextKey, e)
+                    }
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={!!uploading}
+                    onClick={() =>
+                      fileInputRefs.current[step.key]?.click()
+                    }
+                  >
+                    {uploading === step.key ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Extracting…
+                      </>
+                    ) : (
+                      <>
+                        <Paperclip className="mr-2 h-4 w-4" />
+                        Attach file
+                      </>
+                    )}
+                  </Button>
+                  <span className="text-xs text-muted-foreground">
+                    .txt · .md · .docx · .pdf
+                  </span>
+                </div>
+              ) : (
+                <div />
+              )}
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {charCount.toLocaleString()} chars
+              </span>
+            </div>
+            {uploadError && (
+              <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-2 text-xs text-destructive">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>{uploadError}</span>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-2">
@@ -199,8 +317,10 @@ export function Wizard() {
             </Label>
             <Input
               id={step.key}
-              value={state[step.key] as string}
-              onChange={(e) => setField(step.key as keyof WizardState, e.target.value)}
+              value={state[step.key as TextKey]}
+              onChange={(e) =>
+                setField(step.key as TextKey, e.target.value)
+              }
               placeholder={step.placeholder}
               autoFocus
               className="text-base"

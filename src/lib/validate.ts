@@ -1,28 +1,34 @@
 import { z } from "zod";
 
 /**
- * Wizard input schema. These are the raw user inputs from the 5-step wizard.
- * Field order matches the wizard screens.
+ * Wizard input schema. Limits are intentionally generous — users may paste or upload
+ * full avatar documents (20+ pages) or mechanism briefs (30-40+ pages). At ~3,000 chars
+ * per page, we allow well above that. The Anthropic model has a 1M-token context; long
+ * inputs are fine but will push per-generation token cost up linearly.
  */
+const MAX_SMALL = 50_000;      // product, promise — short-form fields, but allow long notes
+const MAX_DOC = 500_000;       // audience, proof — ~160 pages of text
+const MAX_BIG_DOC = 1_000_000; // mechanism — ~330 pages of text
+const MAX_CTA = 5_000;
+
 export const WizardInputSchema = z.object({
-  /** Step 1: What is the product/offer? (e.g., "90-day online fitness coaching for men 40+") */
-  product: z.string().min(5).max(300),
+  /** Step 1: What is the product/offer? (or a detailed offer brief) */
+  product: z.string().min(3).max(MAX_SMALL),
 
-  /** Step 2: Who is the target audience? (e.g., "Men 40-55 who've tried every diet and nothing sticks") */
-  audience: z.string().min(5).max(300),
+  /** Step 2: Audience / avatar (can paste full avatar doc) */
+  audience: z.string().min(3).max(MAX_DOC),
 
-  /** Step 3: What is the big promise / outcome? (e.g., "Lose 20 lbs in 90 days without giving up beer") */
-  promise: z.string().min(5).max(300),
+  /** Step 3: Big promise / desired outcome */
+  promise: z.string().min(3).max(MAX_SMALL),
 
-  /** Step 4: What is the unique mechanism / how? (e.g., "Metabolic cycling — eat more 4 days/week, less for 3") */
-  mechanism: z.string().min(5).max(500),
+  /** Step 4: Mechanism (can paste full mechanism brief — 30-40 pages typical) */
+  mechanism: z.string().min(3).max(MAX_BIG_DOC),
 
-  /**
-   * Step 5: Real proof / CTA details. Accept objects so we never fabricate.
-   * The user types what they actually have; prompt engine passes through verbatim.
-   */
-  proof: z.string().max(1000).optional(),
-  cta: z.string().min(3).max(200),
+  /** Step 5: Real proof — client wins, testimonials, numbers. Never fabricated. */
+  proof: z.string().max(MAX_DOC).optional(),
+
+  /** Call to action */
+  cta: z.string().min(2).max(MAX_CTA),
 
   /** Framework selected in the picker */
   framework: z.enum([
