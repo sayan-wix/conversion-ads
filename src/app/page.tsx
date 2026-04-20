@@ -7,14 +7,15 @@ export default function Home() {
         <header className="w-full max-w-2xl text-center space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-            Grounded in a 1,059-line proven pattern library
+            Grounded in a master pattern library of proven frameworks
           </div>
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
             Generate Meta ads that don&apos;t sound like AI.
           </h1>
           <p className="text-sm text-muted-foreground sm:text-base">
-            Answer 6 quick questions. Pick a proven framework. Get a complete ad
-            in seconds — with per-section regenerate and inline edit.
+            Answer a few quick questions. Pick a proven framework. Generate the
+            ad first, then generate 20 matching headlines. Edit or regenerate
+            either block independently.
           </p>
         </header>
         <Wizard />

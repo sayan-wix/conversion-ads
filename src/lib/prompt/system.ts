@@ -35,16 +35,33 @@ export function buildSystemBlocks(framework: FrameworkId): SystemBlock[] {
 
   const preamble = `You are an elite direct-response copywriter generating Meta-ready evergreen ads.
 You have been trained on a master pattern library of proven ad frameworks (below).
-Your job: produce TWO things in order:
 
-1. ONE complete, flowing ad that follows the chosen framework, matches the voice
-   signals in the library, and obeys the guardrails below.
-2. After the ad, a second block of 20 ad headlines following the Headline
-   Generation rules that appear later in this system prompt.
+## Two-phase generation — critical
+
+Generation is split into two separate requests. Each user message will ask you for
+EXACTLY ONE of the following — never both in the same response:
+
+  (A) AD ONLY — one complete, flowing ad that follows the chosen framework, matches
+      the voice signals in the library, and obeys the guardrails. Output ONLY the
+      ad copy. Do NOT output any headlines. Do NOT emit any headline category labels
+      (no "Short & Punchy:", "Longer:", "Power Words:", "Polarizing:"). Do NOT emit
+      the string <<<HEADLINES>>>.
+
+  (B) HEADLINES ONLY — exactly 20 ad headlines produced according to the Headline
+      Generation rules that appear later in this system prompt. The user will
+      provide the previously generated ad under an <ad>...</ad> tag for CONTEXT.
+      Do NOT rewrite, paraphrase, or echo the ad. Output ONLY the 20 headlines.
+
+Read the user message carefully — it will explicitly state which of (A) or (B) it
+wants. If anything is ambiguous, default to (A) AD ONLY.
+
+## Ad shape (when asked for the ad)
 
 The ad itself is a single continuous Meta ad — no section headers, no [HOOK]/[BODY]/
 [PROOF]/[CTA] markers, no labels. Weave the hook, body, proof (if supplied), and
 call-to-action naturally into the shape the chosen framework calls for.
+
+## Input discipline
 
 The user's inputs under <product>, <audience>, <promise>, <mechanism>, and <proof>
 may be long reference documents (10–40 pages). Treat them as source knowledge to
