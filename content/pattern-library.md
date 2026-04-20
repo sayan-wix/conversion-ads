@@ -1,6 +1,6 @@
 # Master Pattern Library: Evergreen Ad Generator
 
-**Sources Processed:** 8 documents
+**Sources Processed:** 9 documents
 **Date Built:** 2026-04-20
 **Source Files:**
 - `zac1-extracted.md` — Zac's Evergreen Ad Templates (Direct Ads, Story Ads, Micro Offer & Mid-Ticket frameworks)
@@ -11,6 +11,7 @@
 - `power-words-raw.txt` — Power Word Examples for Ad Headlines (categorized reference list)
 - `head-turner-raw.txt` — Head Turner Frameworks & Examples (Story + Direct headline patterns with fill-in-the-blank structures)
 - `copy-blocks-raw.txt` — Copy Blocks Training Director's Cut (P3C2 + Conditions framework — pain, promise, proof, constraints, curiosity, conditions)
+- `direct-ads-extracted.md` — Zac's Direct Ads Swipe File (5 annotated live Direct Ad examples with block-level framework breakdowns)
 
 ---
 
@@ -106,14 +107,20 @@ The voice across all sources shares a distinct signature: casual authority (real
 ### Direct Ad Framework [CORE] [domains: ad-frameworks, micro-offer]
 - **What it is:** A compressed ad structure that states the offer, result, and price directly — no long story buildup required. Extremely effective for sub-$27 offers. Compresses the Evergreen Ad master structure by collapsing the problem/story blocks and leading with the offer or result.
 - **Sub-types (from Zac's system):**
-  - **Direct Ad #1 — Speed-to-Result:** Headturner (price + tool + speed) → 3 Instant Results bullets ("Turn [X] into [Y]") → Proof line → CTA
-  - **Direct Ad #2 — Do This, Get That (Ultra-Short):** One punchy action line → proof → 👉link only
-  - **Direct Ad #3 — Deadline/Urgency:** Hard deadline baked in; works for live workshops + holiday specials
-  - **Direct Ad #4 — Step-By-Step Process:** "If I wanted to [outcome] before [common action], this is what I would do:" → 5 numbered emoji steps → discovery story → bonus stack → case study → CTA
-  - **Direct Ad #5 — Daily Habit/Insight Email System:** "Here's how I [outcome] in just [time]..." → 5 steps → Insight 💡 reveal → authority line → offer → proof → PS guarantee
+  - **Direct Ad #1 — Speed-to-Result:** Headturner (price + tool + speed) → 3 Instant Results bullets ("Turn [X] into [Y]" with 😋 😃 📈 emoji triad) → Proof line ("Responsible for helping over [N] clients like [archetype list]…") → CTA (aspirational reframe + risk-reversed guarantee)
+  - **Direct Ad #2 — Do This, Get That (Ultra-Short):** One punchy action line ("Install / Use this [MECHANISM]") → single-line risk-reversed result → single-line proof ("Validated after working with over [N] clients:") → 👉link only
+  - **Direct Ad #3 — Deadline/Urgency:** Price-as-value headturner ("$[PRICE] = All our [ASSETS] to [OUTCOME]") → full ad → identity-swap Instant Result ("Wave goodbye to X and enroll Y") → "Ends [DATE]" deadline line after link. **Tactical note:** Deadlines keep converting past the date — the urgency frame works structurally even once expired.
+  - **Direct Ad #4 — Step-By-Step Process:** "If I wanted to [outcome] before [common action], this is what I would do:" OR "Here's how I get PAID to [outcome]:" → 5 numbered 1️⃣-5️⃣ emoji steps (kept high-level — "Don't get too technical with the steps") → Proof It Works → Why It Works → Discovery Story ("I learned this from a [unusual source] who's done $[N]…") → Huge Side Benefit ("The best part? You can [unexpected benefit]") → CTA → What We're Covering → Bonuses stack ("just plain silly") → Final CTA ("Are you next?") → first-name signature
+  - **Direct Ad #5 — Daily Habit/Insight Email System:** "Here's how I [outcome] in just [time] a day (without [common hard thing])" → 5 steps → Key Insight reveal ("You don't have to be [common requirement] to [outcome]. Instead, you just need one ingredient: [ONE WORD] 💡") → Why It Works → fun authority line → named-experience CTA → What's happening → How it works (concrete example) → What you get (bonus) → named-client proof ("Anna used this and made $1300 in sales with $700 profit") → Final CTA → first-name signature → **P.S. & Guarantee (two-part):** conditional result-based ("If you don't [result], you don't pay") + universal no-questions refund
+- **Headturner variant taxonomy (Direct Ads):**
+  - **Price-First:** "For $[PRICE], you can get the exact…" / "$[PRICE] = All our [assets] to [outcome]"
+  - **Action-First:** "Install this [MECHANISM] to trigger [OUTCOME]" (decisive/novel) / "Use this [MECHANISM] to trigger [OUTCOME]" (conversational)
+  - **Proof-First:** "This [MECHANISM] has helped over [N] clients skip [hard path] by [outcome]"
+  - **Counter-Factual / Thought-Experiment:** "If I wanted to [outcome], this is what I would do:" / "If I needed [resource] TOMORROW…" / "Here's how I get PAID to [typically-unpaid activity]"
+  - **Daily-Habit:** "Here's how I [outcome] in just [short time] a day (without [common hard thing])"
 - **When to use it:** Start here for all sub-$27 offers. When the result can be stated in one sentence. When the offer mechanism is simple and demonstrable.
-- **Key quotes:** "They work so damn good. One client I wrote these types of ads for is crushing it with the exact same ads one year later. While adding over 1000 buyers to his list at a nice juicy profit (not bad)." / "Start with these if you're selling something under $27."
-- **Sources:** zac1-extracted.md, framework-and-templates-extracted.md
+- **Key quotes:** "They work so damn good. One client I wrote these types of ads for is crushing it with the exact same ads one year later. While adding over 1000 buyers to his list at a nice juicy profit (not bad)." / "Start with these if you're selling something under $27." / "Don't get too technical with the steps — that's where most people screw up." / "This offer is focused on speed to result. So we simply show what happens when they use the tool in the ad copy."
+- **Sources:** zac1-extracted.md, framework-and-templates-extracted.md, direct-ads-extracted.md
 - **Activates (Belief Categories):** Outcome (speed-to-result), Product (direct offer statement), Credibility (proof line), Problem (Instant Results bullet contrast)
 
 ---
@@ -453,6 +460,25 @@ The voice across all sources shares a distinct signature: casual authority (real
 | "🙅‍♂️ 😕 🥲" | Triple conditional opener emotional escalation | SINGLE | Escalating emotional recognition through emojis |
 | "1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣" | Numbered steps in direct ads | RECURRING | Visual step-by-step breakdown; easy to scan |
 | "FINALLY [emotional outburst of joy]!" | Ad creative text overlay | SINGLE | High-emotion text overlay communicating transformation at a glance |
+| "Install this [TIME] [MECHANISM] to trigger [OUTCOME]" | Direct Ad #2 headturner | RECURRING | "Install" feels more decisive and novel than "Use"; both frame mechanism as a tool |
+| "Use this [TIME] [MECHANISM] to trigger [OUTCOME]" | Direct Ad #2 headturner variant | RECURRING | Conversational sibling of "Install this"; interchangeable based on brand feel |
+| "Here's how I [outcome] in just [time] a day (without [common hard thing])" | Direct Ad #5 headturner | RECURRING | Daily-habit framing; parenthetical breaks the expected objection pre-emptively |
+| "For $[PRICE], you can get the exact [TIME] [TOOL NAME] my clients use to rapidly…" | Direct Ad #1 headturner | RECURRING | Price-first hook; works when price is surprisingly low vs. promise |
+| "$[PRICE] = All our [assets] to [outcome]" | Direct Ad #3 headturner | SINGLE | Compressed value equation; instantly communicates ROI |
+| "Validated after working with over [N] clients:" | Direct Ad #2 proof line | RECURRING | Compressed single-line proof; count IS the proof, no qualifiers needed |
+| "Responsible for helping over [N] clients like [archetype list] achieve [outcome] without [common hard path]" | Direct Ad #1 proof | RECURRING | Three-archetype structure; affectionate labels ("Rockstar Mamas & Papas") not corporate |
+| "Wave goodbye to [undesired identity] and enroll [desired identity] in [timeframe]" | Direct Ad #3 Instant Result | RECURRING | Identity-swap format; closes one identity while opening the next |
+| "😋 Turn [adversity] into [pleasure]" / "😃 Turn [emotion] into [emotion]" / "📈 Turn [problems] into [opportunities]" | Direct Ad #1 Instant Results triad | CORE | Three-bullet, one-emoji-per-line transformation stack — the canonical Direct Ad Instant Results format |
+| "If you don't [measurable result], you don't pay" | P.S. guarantee (Direct Ad #5) | RECURRING | Conditional result-based guarantee; first half of the two-part P.S. pattern |
+| "Ask for a refund for any reason at any time and you'll get a full refund, no questions asked" | P.S. guarantee second line | RECURRING | Universal no-questions refund; softens any perceived aggression in the conditional line above |
+| "You don't have to [common requirement] to [outcome]. Instead, you just need one ingredient: [ONE WORD] 💡" | Key Insight reveal (Direct Ad #5) | RECURRING | Simplicity-after-complexity moment; 💡 always on the one-word ingredient |
+| "The best part? You can [unexpected benefit]. Then [compounding benefit]." | Huge Side Benefit block | SINGLE | Direct Ad #4 structural block — unexpected second-order payoff after main case |
+| "I learned this model from a [unusual source] who's done over $[N] in sales and would [specific unusual practice]" | Discovery Story opener | SINGLE | Borrowed-mechanism framing; unusual source makes it feel tested elsewhere |
+| "Ends [DATE]" | Standalone line after CTA link | RECURRING | Deadline marker — short and declarative; keeps converting past the date |
+| "Made in Canada" | Standalone headline | SINGLE | Country-of-origin trust marker; non-sequitur that lands as authentic |
+| "Get PAID to [typically-unpaid activity]" | Counter-factual headturner | RECURRING | Reframes labor as income; works for teaching, creating, content production |
+| "If I wanted to [outcome] before [common action], this is what I would do:" | Thought-experiment headturner (Direct Ad #4) | RECURRING | Conditional framing lets reader borrow the mechanism without commitment |
+| "juicy bonuses" / "just plain silly" bonuses | Bonus intro language | RECURRING | Informal amplifiers; signal generosity without hype-speak |
 
 ---
 
@@ -838,6 +864,7 @@ This section is the dedicated reference for generating high-converting headlines
 - **Outrageous guarantee framing** [CORE] — Frame it as something that makes your accountant have "a mini heart attack" — signals confidence and generosity simultaneously.
 - **Full refund up to a YEAR + eat the fees** [RECURRING] — "I'll give you a full refund up to a YEAR later, no questions asked. And I'll even eat the payment processing fees for you." The "eat the fees" line adds specificity that signals genuine sincerity.
 - **Integrate the guarantee inline** [RECURRING] — "End procrastination and get more done tomorrow than you did all last week or you don't pay." Not just in the P.S.
+- **Two-part P.S. guarantee pattern** [RECURRING] — P.S. opens with conditional result-based ("If you don't [specific result], you don't pay") and closes with universal no-questions refund ("Ask for a refund for any reason at any time and you'll get a full refund, no questions asked"). The second line softens any perceived aggression in the first. Canonical home: end of Direct Ad #5.
 
 ---
 
@@ -847,6 +874,10 @@ This section is the dedicated reference for generating high-converting headlines
 - **Tweak the opening of an existing ad before rebuilding** [SINGLE] — "This is actually a tweaked version of Direct Ad #5. I changed the opening but kept the offer all the same." — Change the angle of entry, not the whole structure.
 - **Message match: ad headline and landing page headline must align** [SINGLE] — "Notice how someone is going to have a VERY clear idea what's happening when they hit the page." — Alignment = higher conversion.
 - **Discovery story adds earned authority** [SINGLE] — Show where the method came from (a mentor, specific experience, modified formula). Borrowed credibility from a source is legitimate.
+- **Deadlines keep working past the deadline** [SINGLE] — Direct Ad #3 was originally written with "Ends Jan 1" but kept converting well into the new year. The urgency frame works structurally; the literal date is less load-bearing than expected. Do not remove deadline language just because it has passed.
+- **Same offer, different headturner = radically different ad** [CORE] — Direct Ads #1 and #2 sell the identical product. The only meaningful difference is opener framing + compression. Treat the Headturner as the ad's real creative variable.
+- **Keep step-by-step steps high-level** [RECURRING] — "Don't get too technical with the steps — that's where most people screw up." Direct Ad #4 rule. Each numbered step should be one action verb + one specific detail, ≤15 words.
+- **P.S. is reserved for the guarantee** [SINGLE] — In the Direct Ad system, the P.S. position is specifically for the two-part refund guarantee, not for additional copy or urgency. The body of the ad stays focused on outcome; the P.S. handles risk-removal.
 
 ---
 
