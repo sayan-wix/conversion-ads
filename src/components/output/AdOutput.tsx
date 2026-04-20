@@ -162,12 +162,28 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
         setRaw(acc);
       }
 
+      // Server sentinel for a failure that happened after the response was already
+      // streaming (can't change status code at that point).
+      const errMatch = acc.match(/\[GENERATION_ERROR\]\s*([\s\S]+)/);
+      if (errMatch) {
+        throw new Error(errMatch[1].trim());
+      }
+
       // If the stream closed without producing any real content, surface a useful
       // error instead of leaving the UI empty (most likely cause: Vercel 60s timeout
       // on an oversized prompt).
       if (!acc.trim()) {
         throw new Error(
           "No content was generated — the request may have timed out. Try shorter inputs or retry.",
+        );
+      }
+
+      // Stream produced bytes but none of them contained the [HOOK]/[BODY]/[PROOF]/[CTA]
+      // markers we parse against. That means we'd silently render empty cards — surface
+      // the raw text as an error so the user sees what actually came back.
+      if (!/\[(HOOK|BODY|PROOF|CTA)\]/i.test(acc)) {
+        throw new Error(
+          `Model returned text with no section markers. Raw output: ${acc.slice(0, 400)}${acc.length > 400 ? "…" : ""}`,
         );
       }
     } catch (err) {

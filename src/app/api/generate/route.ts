@@ -66,7 +66,10 @@ export async function POST(req: Request) {
   const isOpus47 = MODEL.startsWith("claude-opus-4-7");
   const params: Parameters<typeof anthropic.messages.stream>[0] = {
     model: MODEL,
-    max_tokens: 2048,
+    // 4096 gives adaptive thinking room to "think" without starving the final
+    // ad output. With 2048 and a huge prompt, thinking can eat the whole budget
+    // and the stream ends with zero text_deltas.
+    max_tokens: 4096,
     // biome-ignore lint/suspicious/noExplicitAny: SDK accepts structured blocks
     system: systemBlocks as any,
     messages: [{ role: "user", content: userMessage }],
@@ -107,10 +110,25 @@ export async function POST(req: Request) {
             controller.enqueue(encoder.encode(event.delta.text));
           }
         }
+        // If Claude never emitted a text delta (e.g. adaptive thinking consumed the
+        // whole max_tokens budget, or stop_reason was unexpected), surface that
+        // clearly so the client doesn't end up with an empty silent UI.
+        if (!gotFirstToken) {
+          const final = await claudeStream.finalMessage().catch(() => null);
+          const stopReason = final?.stop_reason ?? "unknown";
+          const usage = final?.usage
+            ? ` (in=${final.usage.input_tokens} out=${final.usage.output_tokens})`
+            : "";
+          controller.enqueue(
+            encoder.encode(
+              `\n\n[GENERATION_ERROR] Claude produced no output text. stop_reason=${stopReason}${usage}. Try shorter inputs or retry.`,
+            ),
+          );
+        }
         controller.close();
       } catch (err) {
         const msg = err instanceof Error ? err.message : "generation_failed";
-        controller.enqueue(encoder.encode(`\n\n[ERROR] ${msg}`));
+        controller.enqueue(encoder.encode(`\n\n[GENERATION_ERROR] ${msg}`));
         controller.close();
       } finally {
         clearInterval(heartbeat);
