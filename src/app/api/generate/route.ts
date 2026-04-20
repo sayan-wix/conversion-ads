@@ -5,7 +5,7 @@
  * Runtime: Node (needed for the embedded pattern library; Edge works too but unnecessary)
  * Duration: up to 60s (Vercel Hobby tier allows this for streaming)
  */
-import { anthropic, MODEL, supportsAdaptiveThinking } from "@/lib/anthropic";
+import { anthropic, MODEL } from "@/lib/anthropic";
 import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
 import { WizardInputSchema } from "@/lib/validate";
 import { buildSystemBlocks, buildUserMessage } from "@/lib/prompt/system";
@@ -65,23 +65,25 @@ export async function POST(req: Request) {
   const userMessage = buildUserMessage(input);
 
   // 4. Stream from Anthropic
-  // When adaptive thinking is on (Sonnet 4.6, Opus 4.6, Opus 4.7) the API rejects
-  // `temperature` values other than 1 — so omit it entirely in that case. Only send
-  // a custom temperature on older models that don't use adaptive thinking.
-  const adaptive = supportsAdaptiveThinking(MODEL);
+  //
+  // Thinking is DISABLED on purpose. Per CLAUDE.md Mistake #7: this project runs
+  // retrieval + style-matching against the 120KB embedded pattern library — it is
+  // NOT a reasoning task. Real symptoms when thinking was on (adaptive) with
+  // 60K+ input tokens: Claude consumed the entire 16K output budget thinking and
+  // emitted zero ad text (stop_reason=max_tokens, out=16384, no text deltas).
+  // With thinking off, the model goes straight to writing — cheaper, faster, and
+  // the pattern library does the heavy lifting anyway.
+  //
+  // Because thinking is off, `temperature` is allowed and we use 0.9 for varied copy.
+  // max_tokens is generous (32K) to comfortably fit one ad (~500-1500 tokens) +
+  // 20 headlines (~500-1000 tokens) with headroom for long-winded frameworks.
   const params: Parameters<typeof anthropic.messages.stream>[0] = {
     model: MODEL,
-    // Adaptive thinking counts against max_tokens. With a big prompt (60K+ input
-    // tokens) Claude's thinking can easily consume 3-8K tokens before it starts
-    // writing — and if it hits the cap mid-think, zero ad text is emitted
-    // (stop_reason=max_tokens). 16384 gives thinking room to finish AND leaves
-    // ~8-12K tokens for the actual ad, which is comfortably more than any real
-    // Meta ad needs (~500-1500 tokens).
-    max_tokens: 16384,
+    max_tokens: 32768,
     // biome-ignore lint/suspicious/noExplicitAny: SDK accepts structured blocks
     system: systemBlocks as any,
     messages: [{ role: "user", content: userMessage }],
-    ...(adaptive ? { thinking: { type: "adaptive" } } : { temperature: 0.9 }),
+    temperature: 0.9,
   };
 
   const encoder = new TextEncoder();

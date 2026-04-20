@@ -3,7 +3,7 @@
  * Streams a single-section regenerate (hook, body, proof, or cta).
  * Shares the exact same cached system prefix as /api/generate — cache hit expected.
  */
-import { anthropic, MODEL, supportsAdaptiveThinking } from "@/lib/anthropic";
+import { anthropic, MODEL } from "@/lib/anthropic";
 import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
 import { RegenerateInputSchema } from "@/lib/validate";
 import { buildSystemBlocks, buildRegenerateMessage } from "@/lib/prompt/system";
@@ -41,18 +41,15 @@ export async function POST(req: Request) {
   const systemBlocks = buildSystemBlocks(rest.framework);
   const userMessage = buildRegenerateMessage(rest, previousVersion);
 
-  // Adaptive thinking forbids custom temperature. Only send a temperature when
-  // the model doesn't support adaptive thinking.
-  const adaptive = supportsAdaptiveThinking(MODEL);
+  // Thinking disabled — see /api/generate for full rationale. Regenerate produces
+  // the same shape (ad + 20 headlines) so we match its max_tokens ceiling.
   const params: Parameters<typeof anthropic.messages.stream>[0] = {
     model: MODEL,
-    // Same reasoning as /api/generate: adaptive thinking shares the max_tokens
-    // budget with output. 8192 is plenty for one section + thinking overhead.
-    max_tokens: 8192,
+    max_tokens: 32768,
     // biome-ignore lint/suspicious/noExplicitAny: SDK accepts structured blocks
     system: systemBlocks as any,
     messages: [{ role: "user", content: userMessage }],
-    ...(adaptive ? { thinking: { type: "adaptive" } } : { temperature: 0.95 }),
+    temperature: 0.95,
   };
 
   const encoder = new TextEncoder();
