@@ -45,7 +45,9 @@ export async function POST(req: Request) {
   const adaptive = supportsAdaptiveThinking(MODEL);
   const params: Parameters<typeof anthropic.messages.stream>[0] = {
     model: MODEL,
-    max_tokens: 2048,
+    // Same reasoning as /api/generate: adaptive thinking shares the max_tokens
+    // budget with output. 8192 is plenty for one section + thinking overhead.
+    max_tokens: 8192,
     // biome-ignore lint/suspicious/noExplicitAny: SDK accepts structured blocks
     system: systemBlocks as any,
     messages: [{ role: "user", content: userMessage }],

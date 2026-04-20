@@ -70,10 +70,13 @@ export async function POST(req: Request) {
   const adaptive = supportsAdaptiveThinking(MODEL);
   const params: Parameters<typeof anthropic.messages.stream>[0] = {
     model: MODEL,
-    // 4096 gives adaptive thinking room to "think" without starving the final
-    // ad output. With 2048 and a huge prompt, thinking can eat the whole budget
-    // and the stream ends with zero text_deltas.
-    max_tokens: 4096,
+    // Adaptive thinking counts against max_tokens. With a big prompt (60K+ input
+    // tokens) Claude's thinking can easily consume 3-8K tokens before it starts
+    // writing — and if it hits the cap mid-think, zero ad text is emitted
+    // (stop_reason=max_tokens). 16384 gives thinking room to finish AND leaves
+    // ~8-12K tokens for the actual ad, which is comfortably more than any real
+    // Meta ad needs (~500-1500 tokens).
+    max_tokens: 16384,
     // biome-ignore lint/suspicious/noExplicitAny: SDK accepts structured blocks
     system: systemBlocks as any,
     messages: [{ role: "user", content: userMessage }],
