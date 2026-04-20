@@ -48,3 +48,15 @@ export const RegenerateInputSchema = WizardInputSchema.extend({
 });
 
 export type RegenerateInput = z.infer<typeof RegenerateInputSchema>;
+
+/**
+ * Headlines-only generation. Takes the wizard input PLUS the finalized ad text so
+ * the model can reference the ad's angle / hook when writing matching headlines.
+ * Optional `previousHeadlines` lets the user regenerate headlines with fresh variation.
+ */
+export const HeadlinesInputSchema = WizardInputSchema.extend({
+  adText: z.string().min(10).max(20_000),
+  previousHeadlines: z.string().optional(),
+});
+
+export type HeadlinesInput = z.infer<typeof HeadlinesInputSchema>;

@@ -8,7 +8,7 @@
 import { anthropic, MODEL } from "@/lib/anthropic";
 import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
 import { WizardInputSchema } from "@/lib/validate";
-import { buildSystemBlocks, buildUserMessage } from "@/lib/prompt/system";
+import { buildSystemBlocks, buildAdUserMessage } from "@/lib/prompt/system";
 import { sanitizeOutput } from "@/lib/prompt/guardrails";
 
 export const runtime = "nodejs";
@@ -60,9 +60,13 @@ export async function POST(req: Request) {
   }
   const input = parsed.data;
 
-  // 3. Build prompt
+  // 3. Build prompt — ad-only. Headlines are produced by a follow-up call to
+  // /api/headlines. Splitting keeps each request's output budget small (faster
+  // first token, no risk of max_tokens starving either block) and the system
+  // prompt is byte-identical across both endpoints so /api/headlines gets a
+  // cache hit on the second call.
   const systemBlocks = buildSystemBlocks(input.framework);
-  const userMessage = buildUserMessage(input);
+  const userMessage = buildAdUserMessage(input);
 
   // 4. Stream from Anthropic
   //
@@ -75,11 +79,11 @@ export async function POST(req: Request) {
   // the pattern library does the heavy lifting anyway.
   //
   // Because thinking is off, `temperature` is allowed and we use 0.9 for varied copy.
-  // max_tokens is generous (32K) to comfortably fit one ad (~500-1500 tokens) +
-  // 20 headlines (~500-1000 tokens) with headroom for long-winded frameworks.
+  // 8K max_tokens is plenty for one ad (~500-1500 tokens) — headlines run in a
+  // separate /api/headlines call so we don't need budget for them here.
   const params: Parameters<typeof anthropic.messages.stream>[0] = {
     model: MODEL,
-    max_tokens: 32768,
+    max_tokens: 8192,
     // biome-ignore lint/suspicious/noExplicitAny: SDK accepts structured blocks
     system: systemBlocks as any,
     messages: [{ role: "user", content: userMessage }],

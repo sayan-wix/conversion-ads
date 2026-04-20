@@ -76,43 +76,96 @@ you. If <proof> is empty, the ad stands without specific proof — never fabrica
 }
 
 /**
- * Build the user message payload. Wizard inputs wrapped in explicit tags so the
- * model treats each field as a scoped directive (not advisory text).
+ * Shared wizard-input rendering. The same inputs are referenced by both the
+ * ad-generation and headlines-generation user messages, wrapped in explicit
+ * XML-ish tags so the model treats each field as a scoped directive.
  */
-export function buildUserMessage(input: WizardInput): string {
+function renderInputs(input: WizardInput): string {
   const proofBlock = input.proof?.trim()
     ? `<proof>\n${input.proof.trim()}\n</proof>`
     : `<proof>\n(none supplied — do NOT invent any)\n</proof>`;
 
   return [
-    "Generate the ad now using the chosen framework. Respect ALL hard rules.",
-    "",
     `<product>\n${input.product.trim()}\n</product>`,
     `<audience>\n${input.audience.trim()}\n</audience>`,
     `<promise>\n${input.promise.trim()}\n</promise>`,
     `<mechanism>\n${input.mechanism.trim()}\n</mechanism>`,
     proofBlock,
     `<cta>\n${input.cta.trim()}\n</cta>`,
-    "",
-    "Output the ad copy first — one continuous, flowing piece of writing with",
-    "no section headers or labels. Then emit the exact marker",
-    `${HEADLINES_MARKER} on its own line, then the 20 headlines following the`,
-    "Headline Generation rules (5 short & punchy, 5 longer, 5 power words,",
-    "5 polarizing, in that order, numbered 1-20 under their category labels).",
   ].join("\n");
 }
 
 /**
- * Build a regenerate-whole-ad user message. Reuses the same system prompt and
- * asks Claude to produce a meaningfully different angle / opening / beats than
- * the previous version (if supplied).
+ * Build the user message for AD-ONLY generation. The system prompt still contains
+ * the HEADLINE_RULES block (for prompt-caching byte stability), but the user
+ * message here explicitly tells the model NOT to generate headlines, NOT to emit
+ * the ${HEADLINES_MARKER} marker, and to stop after the call-to-action. Headlines
+ * are produced in a second request to /api/headlines.
  */
-export function buildRegenerateMessage(
+export function buildAdUserMessage(input: WizardInput): string {
+  return [
+    "Generate ONE Meta-ready ad now using the chosen framework. Respect ALL hard rules.",
+    "",
+    renderInputs(input),
+    "",
+    "Output ONLY the ad copy — one continuous, flowing piece of writing with no",
+    "section headers or labels. Stop after the call-to-action.",
+    "",
+    `Do NOT generate any headlines. Do NOT emit the ${HEADLINES_MARKER} marker.`,
+    "Do NOT emit any category labels like 'Short & Punchy' or 'Polarizing'.",
+    "The headlines are produced in a separate follow-up request — ignore the",
+    "Headline Generation section of the system prompt for this message.",
+  ].join("\n");
+}
+
+/**
+ * Build a regenerate-AD user message. Same ad-only scope, but nudges the model
+ * to produce a meaningfully different version than the previous one.
+ */
+export function buildRegenerateAdMessage(
   input: WizardInput,
   previousVersion?: string,
 ): string {
-  const base = buildUserMessage(input);
+  const base = buildAdUserMessage(input);
   if (!previousVersion?.trim()) return base;
 
-  return `${base}\n\nThe previous version of the full output (ad + headlines) was:\n"""\n${previousVersion.trim()}\n"""\n\nWrite a meaningfully DIFFERENT version — new opening line, new angle into the mechanism, new beats, and 20 fresh headlines (no repeats from the previous list). Do not repeat the same hook or structure. Same framework, same inputs, fresh execution. Still emit the ${HEADLINES_MARKER} marker between the ad and the headlines.`;
+  return `${base}\n\nThe previous version of the ad was:\n"""\n${previousVersion.trim()}\n"""\n\nWrite a meaningfully DIFFERENT version — new opening line, new angle into the mechanism, new beats, new rhythm. Do not repeat the same hook or structure. Same framework, same inputs, fresh execution. Ad copy only — no headlines.`;
+}
+
+/**
+ * Build the user message for HEADLINES-ONLY generation. Takes the finalized ad
+ * text so the model can match the ad's angle / hook / voice in the headlines.
+ * Explicitly forbids rewriting the ad.
+ */
+export function buildHeadlinesUserMessage(
+  input: WizardInput,
+  adText: string,
+  previousHeadlines?: string,
+): string {
+  const diffClause = previousHeadlines?.trim()
+    ? `\n\nThe previous set of 20 headlines was:\n"""\n${previousHeadlines.trim()}\n"""\n\nWrite a meaningfully DIFFERENT set of 20 headlines — no repeats, new angles, fresh openings. Still obey the 5+5+5+5 breakdown and every Headline Generation rule.`
+    : "";
+
+  return [
+    "Generate ONLY the 20 ad headlines now. Do NOT rewrite, paraphrase, or output",
+    "the ad copy below — it is provided for context so your headlines match the",
+    "angle, hook, promise, and voice of the ad. Use it as reference, not material",
+    "to repeat.",
+    "",
+    renderInputs(input),
+    "",
+    "<ad>",
+    adText.trim(),
+    "</ad>",
+    "",
+    "Follow the Headline Generation rules in the system prompt exactly:",
+    "- EXACTLY 20 headlines, split 5 short & punchy / 5 longer / 5 power words / 5 polarizing",
+    "- Verb-first, clear outcome, never vague",
+    "- Obey the punctuation bans (no em dashes, no en dashes, no ellipses)",
+    "- Emit the four category labels exactly as specified, numbered 1-20",
+    "",
+    `Do NOT emit the ${HEADLINES_MARKER} marker. Do NOT include any ad copy.`,
+    "Start directly with the 'Short & Punchy:' label.",
+    diffClause,
+  ].join("\n");
 }

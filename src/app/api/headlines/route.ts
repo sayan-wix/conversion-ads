@@ -1,17 +1,24 @@
 /**
- * POST /api/regenerate
- * Streams a fresh AD (ad copy only — headlines live at /api/headlines).
- * Shares the exact same cached system prefix as /api/generate → cache hit.
+ * POST /api/headlines
+ * Streams ONLY the 20 headlines for a given wizard input + finalized ad.
+ *
+ * Architecture note: the system prompt is byte-identical to /api/generate (same
+ * `buildSystemBlocks(framework)` call), so this request lands a full prompt-cache
+ * HIT on the stable prefix — pattern library + guardrails + headline rules, all
+ * cached from the ad-generation call earlier in the session. The volatile bit
+ * (the ad we just generated) goes in the user message, after the cache boundary.
  */
 import { anthropic, MODEL } from "@/lib/anthropic";
 import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
-import { RegenerateInputSchema } from "@/lib/validate";
-import { buildSystemBlocks, buildRegenerateAdMessage } from "@/lib/prompt/system";
+import { HeadlinesInputSchema } from "@/lib/validate";
+import {
+  buildSystemBlocks,
+  buildHeadlinesUserMessage,
+} from "@/lib/prompt/system";
 import { sanitizeOutput } from "@/lib/prompt/guardrails";
 
 export const runtime = "nodejs";
-// Vercel Pro: 300s cap. Shares the same cached system prefix as /api/generate,
-// so most regens are fast, but huge inputs still need room to rebuild the user msg.
+// Vercel Pro: 300s cap. Matches /api/generate.
 export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
@@ -29,7 +36,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "invalid_json" }, { status: 400 });
   }
 
-  const parsed = RegenerateInputSchema.safeParse(body);
+  const parsed = HeadlinesInputSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json(
       { error: "invalid_input", issues: parsed.error.issues },
@@ -37,28 +44,29 @@ export async function POST(req: Request) {
     );
   }
 
-  const { previousVersion, ...rest } = parsed.data;
+  const { adText, previousHeadlines, ...rest } = parsed.data;
   const systemBlocks = buildSystemBlocks(rest.framework);
-  const userMessage = buildRegenerateAdMessage(rest, previousVersion);
+  const userMessage = buildHeadlinesUserMessage(rest, adText, previousHeadlines);
 
-  // Thinking disabled — see /api/generate for full rationale. Ad-only now, so 8K
-  // max_tokens is plenty (~500-1500 token typical ad).
+  // Thinking disabled — this is a pure template-application task (4 formats × 5
+  // headlines) against the library. Thinking would just burn tokens.
+  // 4K max_tokens is plenty: 20 headlines + category labels fit in ~800-1500 tokens,
+  // but we give headroom.
   const params: Parameters<typeof anthropic.messages.stream>[0] = {
     model: MODEL,
-    max_tokens: 8192,
+    max_tokens: 4096,
     // biome-ignore lint/suspicious/noExplicitAny: SDK accepts structured blocks
     system: systemBlocks as any,
     messages: [{ role: "user", content: userMessage }],
-    temperature: 0.95,
+    temperature: 0.9,
   };
 
   const encoder = new TextEncoder();
   const startedAt = Date.now();
   const stream = new ReadableStream({
     async start(controller) {
-      // Matches /api/generate: breadcrumb comments stripped by client, useful for
-      // diagnosing timeouts. See src/app/api/generate/route.ts for full rationale.
-      const hb = (tag: string) => `<!--hb:${tag}:${((Date.now() - startedAt) / 1000).toFixed(1)}s-->\n`;
+      const hb = (tag: string) =>
+        `<!--hb:${tag}:${((Date.now() - startedAt) / 1000).toFixed(1)}s-->\n`;
       const safeEnqueue = (s: string) => {
         try {
           controller.enqueue(encoder.encode(s));
@@ -84,7 +92,6 @@ export async function POST(req: Request) {
               gotFirstToken = true;
               safeEnqueue(hb("firsttoken"));
             }
-            // Same punctuation sanitizer as /api/generate — strip em dashes etc.
             const clean = sanitizeOutput(event.delta.text);
             if (clean) safeEnqueue(clean);
           }
@@ -96,7 +103,7 @@ export async function POST(req: Request) {
             ? ` (in=${final.usage.input_tokens} out=${final.usage.output_tokens})`
             : "";
           safeEnqueue(
-            `\n\n[GENERATION_ERROR] Claude produced no output text. stop_reason=${stopReason}${usage}. Try shorter inputs or retry.`,
+            `\n\n[GENERATION_ERROR] Claude produced no headlines. stop_reason=${stopReason}${usage}. Try again.`,
           );
         }
         safeEnqueue(hb("done"));
@@ -115,6 +122,9 @@ export async function POST(req: Request) {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
       "Cache-Control": "no-store, no-transform",
+      "X-Accel-Buffering": "no",
+      "X-RateLimit-Limit": String(limit.limit),
+      "X-RateLimit-Remaining": String(limit.remaining),
     },
   });
 }
