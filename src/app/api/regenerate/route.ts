@@ -7,6 +7,7 @@ import { anthropic, MODEL, supportsAdaptiveThinking } from "@/lib/anthropic";
 import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
 import { RegenerateInputSchema } from "@/lib/validate";
 import { buildSystemBlocks, buildRegenerateMessage } from "@/lib/prompt/system";
+import { sanitizeOutput } from "@/lib/prompt/guardrails";
 
 export const runtime = "nodejs";
 // Vercel Pro: 300s cap. Shares the same cached system prefix as /api/generate,
@@ -64,7 +65,9 @@ export async function POST(req: Request) {
             event.type === "content_block_delta" &&
             event.delta.type === "text_delta"
           ) {
-            controller.enqueue(encoder.encode(event.delta.text));
+            // Same punctuation sanitizer as /api/generate — strip em dashes etc.
+            const clean = sanitizeOutput(event.delta.text);
+            if (clean) controller.enqueue(encoder.encode(clean));
           }
         }
         controller.close();

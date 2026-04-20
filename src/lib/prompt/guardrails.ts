@@ -66,6 +66,15 @@ embark on, journey of self-discovery, in conclusion, to sum up, rest assured,
 studies show, research proves, scientifically proven, clinically proven,
 9 out of 10, 99% of, thousands of satisfied.
 
+## 2a. Punctuation bans — these are the #1 AI-text tell.
+- NEVER use em dashes (—, U+2014). Not once. Replace with a period, comma, or line break.
+  Example fix: "before resentment calcifies — before patterns become permanent" becomes
+  "before resentment calcifies. before patterns become permanent."
+- NEVER use en dashes (–, U+2013). Same rule.
+- AVOID ellipses ("..." or "…"). Use a period or a line break. An ellipsis is only acceptable
+  in rare cases where a character is literally trailing off mid-thought in dialogue.
+- Prefer periods and fragments. Short sentences punch harder than em-dash-connected clauses.
+
 ## 3. Voice discipline.
 - Match the voice signals in the pattern library: "So…", "Which is why…", "👉🏼", "👇🏼"
   used sparingly and only where they feel natural.
@@ -86,6 +95,29 @@ studies show, research proves, scientifically proven, clinically proven,
   [HOOK]/[BODY]/[PROOF]/[CTA] markers. The hook, body, proof (if supplied), and
   call-to-action should flow naturally in the order the chosen framework calls for.
 `.trim();
+
+/**
+ * Strip forbidden punctuation from generated output. Claude will ignore the
+ * "no em dash" instruction ~10-20% of the time because em dashes are its
+ * single strongest default tic — so we also sanitize on the server.
+ *
+ * Rules:
+ * - em dash (—, U+2014) and en dash (–, U+2013) become a comma + space
+ *   (rarely wrong grammatically, preserves flow)
+ * - Unicode ellipsis (…) and triple-dot ASCII ellipsis (...) become a single period
+ * - Double-comma / stray-space cleanup afterwards
+ *
+ * Safe to apply to a streaming delta: all replacements are per-codepoint or short
+ * fixed strings, nothing that can be split across chunk boundaries by the decoder.
+ */
+export function sanitizeOutput(text: string): string {
+  return text
+    .replace(/[\u2014\u2013]/g, ", ") // em / en dash -> comma+space
+    .replace(/\u2026/g, ".")          // unicode ellipsis -> period
+    .replace(/\.{3,}/g, ".")          // ascii ellipsis (... or more) -> period
+    .replace(/,\s*,/g, ",")           // collapse accidental double commas
+    .replace(/ {2,}/g, " ");          // collapse doubled spaces
+}
 
 /**
  * Scan generated text for banned phrase violations.

@@ -9,6 +9,7 @@ import { anthropic, MODEL, supportsAdaptiveThinking } from "@/lib/anthropic";
 import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
 import { WizardInputSchema } from "@/lib/validate";
 import { buildSystemBlocks, buildUserMessage } from "@/lib/prompt/system";
+import { sanitizeOutput } from "@/lib/prompt/guardrails";
 
 export const runtime = "nodejs";
 // Vercel Pro: 300s cap. Gives Claude room to read huge pasted documents
@@ -112,7 +113,10 @@ export async function POST(req: Request) {
             event.delta.type === "text_delta"
           ) {
             gotFirstToken = true;
-            controller.enqueue(encoder.encode(event.delta.text));
+            // Strip em dashes / en dashes / ellipses on the way out. Claude ignores
+            // the "no em dash" rule too often to trust the prompt alone.
+            const clean = sanitizeOutput(event.delta.text);
+            if (clean) controller.enqueue(encoder.encode(clean));
           }
         }
         // If Claude never emitted a text delta (e.g. adaptive thinking consumed the
