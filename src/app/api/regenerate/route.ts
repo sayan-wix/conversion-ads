@@ -9,7 +9,9 @@ import { RegenerateInputSchema } from "@/lib/validate";
 import { buildSystemBlocks, buildRegenerateMessage } from "@/lib/prompt/system";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+// Vercel Pro: 300s cap. Shares the same cached system prefix as /api/generate,
+// so most regens are fast, but huge inputs still need room to rebuild the user msg.
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {

@@ -313,8 +313,9 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
       {isStreaming && !raw && elapsed >= 8 && (
         <Card className="border-muted-foreground/20 bg-muted/30">
           <CardContent className="p-3 text-xs text-muted-foreground">
-            Claude is reading your inputs. With long documents, the first line of
-            the ad can take 30–60 seconds to appear. You can cancel at any time.
+            Claude is reading your inputs. With very long documents the first line
+            of the ad can take 30 seconds to a couple of minutes to appear. You can
+            cancel at any time.
           </CardContent>
         </Card>
       )}

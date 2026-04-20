@@ -12,7 +12,8 @@ import mammoth from "mammoth";
 // Vercel's serverless environment, returning HTML 500s for ALL uploads (even .txt).
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+// Vercel Pro: 300s. Big PDFs and docx files can take a while to extract.
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 // Vercel serverless has a ~4.5MB body limit; cap uploads here so we fail fast with a

@@ -61,7 +61,7 @@ automatically on `predev` / `prebuild`. This means the library is available in a
 | Path | What it does |
 |---|---|
 | `src/app/page.tsx` | Landing + wizard entry |
-| `src/app/api/generate/route.ts` | Generate endpoint (Node, streaming, `maxDuration = 60`) |
+| `src/app/api/generate/route.ts` | Generate endpoint (Node, streaming, `maxDuration = 300` on Vercel Pro) |
 | `src/app/api/regenerate/route.ts` | Per-section regenerate endpoint |
 | `src/components/wizard/*` | 5 wizard steps + framework picker |
 | `src/components/output/*` | Ad renderer, section regen, copy button |

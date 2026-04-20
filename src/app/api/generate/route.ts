@@ -11,7 +11,9 @@ import { WizardInputSchema } from "@/lib/validate";
 import { buildSystemBlocks, buildUserMessage } from "@/lib/prompt/system";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+// Vercel Pro: 300s cap. Gives Claude room to read huge pasted documents
+// (avatar, mechanism) before emitting the first streamed token.
+export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 type BetaHeaders = Record<string, string>;
