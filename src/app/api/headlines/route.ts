@@ -45,7 +45,7 @@ export async function POST(req: Request) {
   }
 
   const { adText, previousHeadlines, ...rest } = parsed.data;
-  const systemBlocks = buildSystemBlocks(rest.framework);
+  const systemBlocks = buildSystemBlocks(rest.framework, rest.customRules);
   const userMessage = buildHeadlinesUserMessage(rest, adText, previousHeadlines);
 
   // Thinking disabled — this is a pure template-application task (4 formats × 5

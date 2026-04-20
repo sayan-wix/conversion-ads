@@ -7,6 +7,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { FRAMEWORKS, type FrameworkId } from "@/lib/prompt/frameworks";
 import {
+  addRule,
+  type CustomRule,
+  loadRules,
+  rulesToStringArray,
+} from "@/lib/customRules";
+import { RulesManager } from "./RulesManager";
+import { FeedbackBox } from "./FeedbackBox";
+import {
   Copy,
   RefreshCw,
   ArrowLeft,
@@ -51,13 +59,24 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
   // `activeTarget` says which block is currently streaming (if any). This drives
   // the spinner placement and which card shows the "…" placeholder.
   const [activeTarget, setActiveTarget] = useState<Target | null>(null);
-  // `action` disambiguates initial generation vs. regenerate for the status label.
-  const [action, setAction] = useState<"generate" | "regenerate" | null>(null);
+  // `action` disambiguates initial generation vs. regenerate vs. revise for
+  // the status label shown next to the spinner.
+  const [action, setAction] = useState<
+    "generate" | "regenerate" | "revise" | null
+  >(null);
 
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<CopyKey | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Persistent user rules (localStorage). Sent with every API call so the
+  // server can inject them into the system prompt as hard rules.
+  const [rules, setRules] = useState<CustomRule[]>([]);
+
+  useEffect(() => {
+    setRules(loadRules());
+  }, []);
 
   const framework = FRAMEWORKS[input.framework];
   const busy = activeTarget !== null;
@@ -79,10 +98,14 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
    * failures surface "where the server was when it died" in the error banner.
    */
   async function runStream(
-    endpoint: "/api/generate" | "/api/regenerate" | "/api/headlines",
+    endpoint:
+      | "/api/generate"
+      | "/api/regenerate"
+      | "/api/headlines"
+      | "/api/revise",
     body: Record<string, unknown>,
     target: Target,
-    phase: "generate" | "regenerate",
+    phase: "generate" | "regenerate" | "revise",
   ) {
     setError(null);
     setActiveTarget(target);
@@ -178,9 +201,22 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
     }
   }
 
+  /**
+   * Every outgoing request spreads this so the server gets the current
+   * wizard inputs + the current custom-rules list in a single object.
+   * Keeping it in a helper makes sure we never forget to attach the rules.
+   */
+  function withRules(extra: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+      ...input,
+      customRules: rulesToStringArray(rules),
+      ...extra,
+    };
+  }
+
   /** Initial ad generation (runs once on mount). */
   async function streamGenerateAd() {
-    await runStream("/api/generate", input, "ad", "generate");
+    await runStream("/api/generate", withRules(), "ad", "generate");
   }
 
   /** Regenerate the ad with a different angle. Clears headlines since they're
@@ -188,7 +224,7 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
   async function regenerateAd() {
     await runStream(
       "/api/regenerate",
-      { ...input, previousVersion: ad },
+      withRules({ previousVersion: ad }),
       "ad",
       "regenerate",
     );
@@ -200,7 +236,7 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
     if (!ad.trim()) return;
     await runStream(
       "/api/headlines",
-      { ...input, adText: ad },
+      withRules({ adText: ad }),
       "headlines",
       "generate",
     );
@@ -211,9 +247,55 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
     if (!ad.trim()) return;
     await runStream(
       "/api/headlines",
-      { ...input, adText: ad, previousHeadlines: headlines },
+      withRules({ adText: ad, previousHeadlines: headlines }),
       "headlines",
       "regenerate",
+    );
+  }
+
+  /**
+   * Apply user feedback to the ad (targeted revision, not full regeneration).
+   * If `saveAsRule` is true, the feedback is also stored in localStorage so it
+   * gets applied to every future generation.
+   */
+  async function reviseAd(feedback: string, saveAsRule: boolean) {
+    if (!ad.trim() || !feedback.trim()) return;
+    // Save the rule BEFORE the request so it's included in customRules on
+    // this very call — guarantees the revision both applies the feedback
+    // AND anchors it as a rule for consistency.
+    const nextRules = saveAsRule ? addRule(feedback) : rules;
+    if (saveAsRule) setRules(nextRules);
+    await runStream(
+      "/api/revise",
+      {
+        ...input,
+        customRules: rulesToStringArray(nextRules),
+        target: "ad",
+        currentText: ad,
+        feedback,
+      },
+      "ad",
+      "revise",
+    );
+  }
+
+  /** Apply user feedback to the headlines. Same save-as-rule behavior. */
+  async function reviseHeadlines(feedback: string, saveAsRule: boolean) {
+    if (!headlines.trim() || !feedback.trim()) return;
+    const nextRules = saveAsRule ? addRule(feedback) : rules;
+    if (saveAsRule) setRules(nextRules);
+    await runStream(
+      "/api/revise",
+      {
+        ...input,
+        customRules: rulesToStringArray(nextRules),
+        target: "headlines",
+        currentText: headlines,
+        feedback,
+        adText: ad,
+      },
+      "headlines",
+      "revise",
     );
   }
 
@@ -239,14 +321,12 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
   }
 
   const adReady = Boolean(ad.trim()) && activeTarget !== "ad";
-  const busyLabel =
-    action === "regenerate"
-      ? activeTarget === "headlines"
-        ? "Regenerating headlines"
-        : "Regenerating ad"
-      : activeTarget === "headlines"
-        ? "Generating headlines"
-        : "Generating ad";
+  const busyLabel = (() => {
+    const what = activeTarget === "headlines" ? "headlines" : "ad";
+    if (action === "revise") return `Applying feedback to the ${what}`;
+    if (action === "regenerate") return `Regenerating the ${what}`;
+    return `Generating the ${what}`;
+  })();
   const bothText = [
     ad,
     headlines && `\n\n--- 20 Headlines ---\n\n${headlines}`,
@@ -303,6 +383,15 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
           </Button>
         </div>
       </div>
+
+      {/* Persistent universal rules (saved via the FeedbackBox checkbox). Lives
+          above the output cards so users can see and manage what's being
+          silently applied to every generation. */}
+      <RulesManager
+        rules={rules}
+        onRulesChange={setRules}
+        disabled={busy}
+      />
 
       {activeTarget === "ad" && !ad && elapsed >= 8 && (
         <Card className="border-muted-foreground/20 bg-muted/30">
@@ -398,6 +487,15 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
               {ad || (activeTarget === "ad" ? "…" : "")}
             </pre>
           )}
+
+          {ad && (
+            <FeedbackBox
+              target="ad"
+              busy={activeTarget === "ad" && action === "revise"}
+              disabled={busy}
+              onApply={reviseAd}
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -482,6 +580,15 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
               <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed min-h-[8rem]">
                 {headlines || (activeTarget === "headlines" ? "…" : "")}
               </pre>
+            )}
+
+            {headlines && (
+              <FeedbackBox
+                target="headlines"
+                busy={activeTarget === "headlines" && action === "revise"}
+                disabled={busy}
+                onApply={reviseHeadlines}
+              />
             )}
           </CardContent>
         </Card>

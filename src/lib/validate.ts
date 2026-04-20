@@ -11,6 +11,16 @@ const MAX_DOC = 500_000;       // audience, proof — ~160 pages of text
 const MAX_BIG_DOC = 1_000_000; // mechanism — ~330 pages of text
 const MAX_CTA = 5_000;
 
+/**
+ * Per-user custom rules. Appended as a dedicated "MY CUSTOM RULES" block in the
+ * system prompt so they take precedence over everything else. Stored client-side
+ * in localStorage and sent with every request.
+ */
+const CustomRulesSchema = z
+  .array(z.string().min(2).max(500))
+  .max(50)
+  .optional();
+
 export const WizardInputSchema = z.object({
   /** Step 1: What is the product/offer? (or a detailed offer brief) */
   product: z.string().min(3).max(MAX_SMALL),
@@ -38,6 +48,9 @@ export const WizardInputSchema = z.object({
     "direct-short",
     "problem-solution-story",
   ]),
+
+  /** Per-user hard rules (localStorage-backed). Injected into system prompt. */
+  customRules: CustomRulesSchema,
 });
 
 export type WizardInput = z.infer<typeof WizardInputSchema>;
@@ -60,3 +73,18 @@ export const HeadlinesInputSchema = WizardInputSchema.extend({
 });
 
 export type HeadlinesInput = z.infer<typeof HeadlinesInputSchema>;
+
+/**
+ * Targeted revision of an already-generated ad or headlines block. The user
+ * provides explicit feedback ("change the third paragraph to first person",
+ * "the CTA feels weak", etc.) and we apply it surgically.
+ */
+export const ReviseInputSchema = WizardInputSchema.extend({
+  target: z.enum(["ad", "headlines"]),
+  currentText: z.string().min(10).max(20_000),
+  feedback: z.string().min(3).max(5_000),
+  /** When revising headlines, the original ad is needed for context. */
+  adText: z.string().max(20_000).optional(),
+});
+
+export type ReviseInput = z.infer<typeof ReviseInputSchema>;

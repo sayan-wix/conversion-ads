@@ -30,7 +30,10 @@ export type SystemBlock =
   | { type: "text"; text: string; cache_control?: { type: "ephemeral" } }
   | { type: "text"; text: string };
 
-export function buildSystemBlocks(framework: FrameworkId): SystemBlock[] {
+export function buildSystemBlocks(
+  framework: FrameworkId,
+  customRules?: string[],
+): SystemBlock[] {
   const library = loadPatternLibrary();
 
   const preamble = `You are an elite direct-response copywriter generating Meta-ready evergreen ads.
@@ -89,7 +92,33 @@ you. If <proof> is empty, the ad stands without specific proof — never fabrica
     text: `# CHOSEN FRAMEWORK: ${FRAMEWORKS[framework].name}\n\n${getFrameworkInstructions(framework)}`,
   };
 
-  return [stableHead, dynamic];
+  const blocks: SystemBlock[] = [stableHead, dynamic];
+
+  // Block 4 — user-specific overrides. Added LAST so it's the most recent
+  // instruction in the system prompt and takes precedence over the generic
+  // library guidance. Not cached (changes whenever the user edits their rules).
+  //
+  // These are framed as HARD RULES so the model treats them with the same weight
+  // as the guardrails, not as soft suggestions.
+  const rules = (customRules ?? [])
+    .map((r) => r.trim())
+    .filter(Boolean);
+  if (rules.length > 0) {
+    const rulesBlock = [
+      "# MY CUSTOM RULES (user-defined, highest precedence)",
+      "",
+      "The user has saved the following rules from prior sessions. Treat each as a",
+      "HARD RULE — same weight as the guardrails above. If any of these conflict with",
+      "a softer guideline from the pattern library, the custom rule WINS. Apply them",
+      "to both ad generation and headline generation. Do not mention that you are",
+      "following them — just obey them silently.",
+      "",
+      ...rules.map((r, i) => `${i + 1}. ${r}`),
+    ].join("\n");
+    blocks.push({ type: "text", text: rulesBlock });
+  }
+
+  return blocks;
 }
 
 /**
@@ -184,5 +213,75 @@ export function buildHeadlinesUserMessage(
     `Do NOT emit the ${HEADLINES_MARKER} marker. Do NOT include any ad copy.`,
     "Start directly with the 'Short & Punchy:' label.",
     diffClause,
+  ].join("\n");
+}
+
+/**
+ * Build a targeted-revision user message. Used when the user gives explicit
+ * feedback on an already-generated block ("change the third paragraph to first
+ * person", "cut the emoji", etc.) and we want to surgically apply it rather
+ * than regenerate from scratch.
+ *
+ * The full current block is included so Claude has exact context. We explicitly
+ * tell the model to preserve everything the feedback DOESN'T complain about,
+ * so the rest of the copy stays stable.
+ */
+export function buildReviseUserMessage(args: {
+  input: WizardInput;
+  target: "ad" | "headlines";
+  currentText: string;
+  feedback: string;
+  /** Required only when target is "headlines" — the ad is provided for context. */
+  adText?: string;
+}): string {
+  const { input, target, currentText, feedback, adText } = args;
+
+  if (target === "ad") {
+    return [
+      "Revise the ad below based on the user's feedback. Apply the feedback",
+      "surgically — keep everything the feedback does NOT complain about exactly",
+      "as-is. Do not rewrite good parts. Output the full revised ad (not a diff,",
+      "not a partial). Obey ALL hard rules and any MY CUSTOM RULES in the system",
+      "prompt.",
+      "",
+      renderInputs(input),
+      "",
+      "<current_ad>",
+      currentText.trim(),
+      "</current_ad>",
+      "",
+      "<user_feedback>",
+      feedback.trim(),
+      "</user_feedback>",
+      "",
+      "Output ONLY the full revised ad. No headlines. No category labels. No",
+      `<<<HEADLINES>>> marker. No preamble like "Here's the revised ad:". Start`,
+      "directly with the first line of the revised ad.",
+    ].join("\n");
+  }
+
+  // target === "headlines"
+  return [
+    "Revise the 20 headlines below based on the user's feedback. Apply the",
+    "feedback surgically — keep headlines the feedback does NOT complain about",
+    "exactly as-is. Still obey the 5+5+5+5 breakdown and every Headline",
+    "Generation rule. Still include the four category labels.",
+    "",
+    renderInputs(input),
+    "",
+    adText
+      ? `<ad>\n${adText.trim()}\n</ad>\n`
+      : "",
+    "<current_headlines>",
+    currentText.trim(),
+    "</current_headlines>",
+    "",
+    "<user_feedback>",
+    feedback.trim(),
+    "</user_feedback>",
+    "",
+    "Output ONLY the full revised set of 20 headlines with the four category",
+    "labels, numbered 1-20. No ad copy. No preamble. Start directly with the",
+    "'Short & Punchy:' label.",
   ].join("\n");
 }

@@ -65,7 +65,7 @@ export async function POST(req: Request) {
   // first token, no risk of max_tokens starving either block) and the system
   // prompt is byte-identical across both endpoints so /api/headlines gets a
   // cache hit on the second call.
-  const systemBlocks = buildSystemBlocks(input.framework);
+  const systemBlocks = buildSystemBlocks(input.framework, input.customRules);
   const userMessage = buildAdUserMessage(input);
 
   // 4. Stream from Anthropic
