@@ -78,6 +78,24 @@ export async function POST(req: Request) {
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
+      // Flush a zero-width-space immediately so Vercel / any reverse proxy stops
+      // buffering and the browser sees bytes right away. Without this, huge prompts
+      // can leave the client staring at nothing for 30-60s and it looks frozen.
+      controller.enqueue(encoder.encode("\u200B"));
+
+      // Keepalive heartbeats every 10s while we wait for Claude to produce the first
+      // real token. Each heartbeat is a zero-width-space that the client filters out.
+      let gotFirstToken = false;
+      const heartbeat = setInterval(() => {
+        if (!gotFirstToken) {
+          try {
+            controller.enqueue(encoder.encode("\u200B"));
+          } catch {
+            /* controller may be closed */
+          }
+        }
+      }, 10_000);
+
       try {
         const claudeStream = anthropic.messages.stream(params);
         for await (const event of claudeStream) {
@@ -85,6 +103,7 @@ export async function POST(req: Request) {
             event.type === "content_block_delta" &&
             event.delta.type === "text_delta"
           ) {
+            gotFirstToken = true;
             controller.enqueue(encoder.encode(event.delta.text));
           }
         }
@@ -93,6 +112,8 @@ export async function POST(req: Request) {
         const msg = err instanceof Error ? err.message : "generation_failed";
         controller.enqueue(encoder.encode(`\n\n[ERROR] ${msg}`));
         controller.close();
+      } finally {
+        clearInterval(heartbeat);
       }
     },
   });

@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   Loader2,
   Pencil,
+  X,
 } from "lucide-react";
 
 type Input = {
@@ -90,7 +91,20 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
   const [regenerating, setRegenerating] = useState<SectionKey | null>(null);
   const [editing, setEditing] = useState<SectionKey | null>(null);
   const [copied, setCopied] = useState<SectionKey | "ALL" | null>(null);
+  const [elapsed, setElapsed] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Tick an elapsed-time counter while streaming so the user can see something
+  // is happening during the long wait before Claude's first token.
+  useEffect(() => {
+    if (!isStreaming) return;
+    const startedAt = Date.now();
+    setElapsed(0);
+    const id = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startedAt) / 1000));
+    }, 500);
+    return () => clearInterval(id);
+  }, [isStreaming]);
 
   useEffect(() => {
     setSections(parseSections(raw));
@@ -141,8 +155,20 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
       for (;;) {
         const { value, done } = await reader.read();
         if (done) break;
-        acc += decoder.decode(value, { stream: true });
+        // Strip server-sent zero-width-space heartbeats so they don't pollute the UI.
+        const chunk = decoder.decode(value, { stream: true }).replace(/\u200B/g, "");
+        if (!chunk) continue;
+        acc += chunk;
         setRaw(acc);
+      }
+
+      // If the stream closed without producing any real content, surface a useful
+      // error instead of leaving the UI empty (most likely cause: Vercel 60s timeout
+      // on an oversized prompt).
+      if (!acc.trim()) {
+        throw new Error(
+          "No content was generated — the request may have timed out. Try shorter inputs or retry.",
+        );
       }
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
@@ -151,6 +177,12 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
       setIsStreaming(false);
       abortRef.current = null;
     }
+  }
+
+  function cancelStream() {
+    abortRef.current?.abort();
+    setIsStreaming(false);
+    setError("Generation cancelled.");
   }
 
   async function streamRegenerateSection(section: SectionKey) {
@@ -234,8 +266,20 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
           {isStreaming && (
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Loader2 className="h-3 w-3 animate-spin" />
-              Generating...
+              Generating… {elapsed > 0 ? `${elapsed}s` : ""}
             </span>
+          )}
+          {isStreaming && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs"
+              onClick={cancelStream}
+              type="button"
+            >
+              <X className="mr-1 h-3 w-3" />
+              Cancel
+            </Button>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -249,6 +293,15 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
           </Button>
         </div>
       </div>
+
+      {isStreaming && !raw && elapsed >= 8 && (
+        <Card className="border-muted-foreground/20 bg-muted/30">
+          <CardContent className="p-3 text-xs text-muted-foreground">
+            Claude is reading your inputs. With long documents, the first line of
+            the ad can take 30–60 seconds to appear. You can cancel at any time.
+          </CardContent>
+        </Card>
+      )}
 
       {error && (
         <Card className="border-destructive/50 bg-destructive/5">
