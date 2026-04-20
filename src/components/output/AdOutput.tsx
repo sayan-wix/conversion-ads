@@ -140,10 +140,25 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let acc = "";
+      // Track the last diagnostic breadcrumb the server emitted. If the stream
+      // closes with no real content, we use this to tell the user whether the
+      // function timed out mid-wait, died at first token, etc.
+      let lastHb: { tag: string; at: string } | null = null;
+      const hbRe = /<!--hb:([a-z]+):([0-9.]+s)-->/g;
       for (;;) {
         const { value, done } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true }).replace(/\u200B/g, "");
+        let chunk = decoder
+          .decode(value, { stream: true })
+          .replace(/\u200B/g, "");
+        // Extract every hb comment from this chunk (last one wins) and strip them.
+        let hbMatch: RegExpExecArray | null;
+        hbRe.lastIndex = 0;
+        // biome-ignore lint/suspicious/noAssignInExpressions: regex exec loop
+        while ((hbMatch = hbRe.exec(chunk)) !== null) {
+          lastHb = { tag: hbMatch[1], at: hbMatch[2] };
+        }
+        chunk = chunk.replace(/<!--hb:[a-z]+:[0-9.]+s-->\n?/g, "");
         if (!chunk) continue;
         acc += chunk;
         setRaw(acc);
@@ -153,8 +168,18 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
       if (errMatch) throw new Error(errMatch[1].trim());
 
       if (!acc.trim()) {
+        // Build a diagnostic message using the last heartbeat we saw. Gives a clear
+        // signal of whether Vercel killed the function (lastHb near 300s) or the
+        // stream failed instantly (no lastHb at all).
+        const where = lastHb
+          ? `Last server breadcrumb: ${lastHb.tag} at ${lastHb.at}. `
+          : "No server breadcrumbs received. ";
+        const hint =
+          lastHb && lastHb.tag !== "done"
+            ? "Looks like the server was cut off before Claude finished. "
+            : "";
         throw new Error(
-          "No content was generated. The request may have timed out. Retry or trim very large inputs.",
+          `No content was generated. ${where}${hint}Retry, or reduce input size if this is repeating.`,
         );
       }
     } catch (err) {

@@ -85,24 +85,28 @@ export async function POST(req: Request) {
   };
 
   const encoder = new TextEncoder();
+  const startedAt = Date.now();
   const stream = new ReadableStream({
     async start(controller) {
-      // Flush a zero-width-space immediately so Vercel / any reverse proxy stops
-      // buffering and the browser sees bytes right away. Without this, huge prompts
-      // can leave the client staring at nothing for 30-60s and it looks frozen.
-      controller.enqueue(encoder.encode("\u200B"));
+      // Emit a visible HTML comment as the first byte so (a) Vercel / reverse proxies
+      // flush immediately and (b) we have a diagnostic breadcrumb in the stream. The
+      // client strips `<!--...-->` comments before rendering.
+      const hb = (tag: string) => `<!--hb:${tag}:${((Date.now() - startedAt) / 1000).toFixed(1)}s-->\n`;
+      const safeEnqueue = (s: string) => {
+        try {
+          controller.enqueue(encoder.encode(s));
+        } catch {
+          /* controller may be closed */
+        }
+      };
+      safeEnqueue(hb("open"));
 
-      // Keepalive heartbeats every 10s while we wait for Claude to produce the first
-      // real token. Each heartbeat is a zero-width-space that the client filters out.
+      // Keepalive breadcrumbs every 10s while we wait for Claude's first real token.
+      // When the stream times out mid-way, the client can read the LAST breadcrumb to
+      // tell how far the function got before Vercel killed it.
       let gotFirstToken = false;
       const heartbeat = setInterval(() => {
-        if (!gotFirstToken) {
-          try {
-            controller.enqueue(encoder.encode("\u200B"));
-          } catch {
-            /* controller may be closed */
-          }
-        }
+        if (!gotFirstToken) safeEnqueue(hb("wait"));
       }, 10_000);
 
       try {
@@ -112,11 +116,14 @@ export async function POST(req: Request) {
             event.type === "content_block_delta" &&
             event.delta.type === "text_delta"
           ) {
-            gotFirstToken = true;
+            if (!gotFirstToken) {
+              gotFirstToken = true;
+              safeEnqueue(hb("firsttoken"));
+            }
             // Strip em dashes / en dashes / ellipses on the way out. Claude ignores
             // the "no em dash" rule too often to trust the prompt alone.
             const clean = sanitizeOutput(event.delta.text);
-            if (clean) controller.enqueue(encoder.encode(clean));
+            if (clean) safeEnqueue(clean);
           }
         }
         // If Claude never emitted a text delta (e.g. adaptive thinking consumed the
@@ -128,16 +135,15 @@ export async function POST(req: Request) {
           const usage = final?.usage
             ? ` (in=${final.usage.input_tokens} out=${final.usage.output_tokens})`
             : "";
-          controller.enqueue(
-            encoder.encode(
-              `\n\n[GENERATION_ERROR] Claude produced no output text. stop_reason=${stopReason}${usage}. Try shorter inputs or retry.`,
-            ),
+          safeEnqueue(
+            `\n\n[GENERATION_ERROR] Claude produced no output text. stop_reason=${stopReason}${usage}. Try shorter inputs or retry.`,
           );
         }
+        safeEnqueue(hb("done"));
         controller.close();
       } catch (err) {
         const msg = err instanceof Error ? err.message : "generation_failed";
-        controller.enqueue(encoder.encode(`\n\n[GENERATION_ERROR] ${msg}`));
+        safeEnqueue(`\n\n[GENERATION_ERROR] ${msg}`);
         controller.close();
       } finally {
         clearInterval(heartbeat);

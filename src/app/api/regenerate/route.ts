@@ -56,8 +56,26 @@ export async function POST(req: Request) {
   };
 
   const encoder = new TextEncoder();
+  const startedAt = Date.now();
   const stream = new ReadableStream({
     async start(controller) {
+      // Matches /api/generate: breadcrumb comments stripped by client, useful for
+      // diagnosing timeouts. See src/app/api/generate/route.ts for full rationale.
+      const hb = (tag: string) => `<!--hb:${tag}:${((Date.now() - startedAt) / 1000).toFixed(1)}s-->\n`;
+      const safeEnqueue = (s: string) => {
+        try {
+          controller.enqueue(encoder.encode(s));
+        } catch {
+          /* controller may be closed */
+        }
+      };
+      safeEnqueue(hb("open"));
+
+      let gotFirstToken = false;
+      const heartbeat = setInterval(() => {
+        if (!gotFirstToken) safeEnqueue(hb("wait"));
+      }, 10_000);
+
       try {
         const claudeStream = anthropic.messages.stream(params);
         for await (const event of claudeStream) {
@@ -65,16 +83,33 @@ export async function POST(req: Request) {
             event.type === "content_block_delta" &&
             event.delta.type === "text_delta"
           ) {
+            if (!gotFirstToken) {
+              gotFirstToken = true;
+              safeEnqueue(hb("firsttoken"));
+            }
             // Same punctuation sanitizer as /api/generate — strip em dashes etc.
             const clean = sanitizeOutput(event.delta.text);
-            if (clean) controller.enqueue(encoder.encode(clean));
+            if (clean) safeEnqueue(clean);
           }
         }
+        if (!gotFirstToken) {
+          const final = await claudeStream.finalMessage().catch(() => null);
+          const stopReason = final?.stop_reason ?? "unknown";
+          const usage = final?.usage
+            ? ` (in=${final.usage.input_tokens} out=${final.usage.output_tokens})`
+            : "";
+          safeEnqueue(
+            `\n\n[GENERATION_ERROR] Claude produced no output text. stop_reason=${stopReason}${usage}. Try shorter inputs or retry.`,
+          );
+        }
+        safeEnqueue(hb("done"));
         controller.close();
       } catch (err) {
         const msg = err instanceof Error ? err.message : "generation_failed";
-        controller.enqueue(encoder.encode(`\n\n[ERROR] ${msg}`));
+        safeEnqueue(`\n\n[GENERATION_ERROR] ${msg}`);
         controller.close();
+      } finally {
+        clearInterval(heartbeat);
       }
     },
   });
