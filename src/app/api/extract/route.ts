@@ -6,7 +6,10 @@
  * Used by the wizard to let users attach source docs directly instead of pasting.
  */
 import mammoth from "mammoth";
-import { PDFParse } from "pdf-parse";
+
+// NOTE: pdf-parse is lazy-imported inside the PDF branch below. Statically importing
+// it at module load caused the whole /api/extract function to crash at cold start in
+// Vercel's serverless environment, returning HTML 500s for ALL uploads (even .txt).
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -51,7 +54,26 @@ export async function POST(req: Request) {
       const result = await mammoth.extractRawText({ buffer: buf });
       text = result.value;
     } else if (name.endsWith(".pdf")) {
-      // pdf-parse v2 class-based API — officially supports Next.js + Vercel.
+      // Lazy-import pdf-parse so non-PDF uploads never touch it. If pdf-parse itself
+      // fails to load (native deps, missing workers, etc.), return a clear JSON error
+      // instead of crashing the function.
+      let PDFParse: new (opts: { data: Uint8Array }) => {
+        getText: () => Promise<{ text: string }>;
+      };
+      try {
+        const mod = await import("pdf-parse");
+        PDFParse = mod.PDFParse;
+      } catch (e) {
+        return Response.json(
+          {
+            error: "pdf_support_unavailable",
+            message:
+              "PDF parsing is temporarily unavailable on the server. Try converting to .docx or .txt.",
+            detail: (e as Error).message,
+          },
+          { status: 503 },
+        );
+      }
       const parser = new PDFParse({ data: new Uint8Array(buf) });
       const result = await parser.getText();
       text = result.text;
