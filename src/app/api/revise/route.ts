@@ -16,6 +16,7 @@ import {
   buildReviseUserMessage,
 } from "@/lib/prompt/system";
 import { sanitizeOutput } from "@/lib/prompt/guardrails";
+import { loadRuleTexts } from "@/lib/serverRules";
 
 export const runtime = "nodejs";
 // Vercel Pro: 300s cap. Matches /api/generate + /api/headlines.
@@ -45,7 +46,11 @@ export async function POST(req: Request) {
   }
 
   const { target, currentText, feedback, adText, ...rest } = parsed.data;
-  const systemBlocks = buildSystemBlocks(rest.framework, rest.customRules);
+  // Server-side rules from Upstash — shared across all users. Critical for the
+  // "save as universal rule" flow: the client calls POST /api/rules BEFORE
+  // calling /api/revise, so by the time we read here, the new rule is in Redis.
+  const customRules = await loadRuleTexts();
+  const systemBlocks = buildSystemBlocks(rest.framework, customRules);
   const userMessage = buildReviseUserMessage({
     input: rest,
     target,

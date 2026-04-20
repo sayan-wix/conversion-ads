@@ -8,6 +8,7 @@ import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
 import { RegenerateInputSchema } from "@/lib/validate";
 import { buildSystemBlocks, buildRegenerateAdMessage } from "@/lib/prompt/system";
 import { sanitizeOutput } from "@/lib/prompt/guardrails";
+import { loadRuleTexts } from "@/lib/serverRules";
 
 export const runtime = "nodejs";
 // Vercel Pro: 300s cap. Shares the same cached system prefix as /api/generate,
@@ -38,7 +39,9 @@ export async function POST(req: Request) {
   }
 
   const { previousVersion, ...rest } = parsed.data;
-  const systemBlocks = buildSystemBlocks(rest.framework, rest.customRules);
+  // Server-side rules from Upstash — shared across all users, client doesn't send.
+  const customRules = await loadRuleTexts();
+  const systemBlocks = buildSystemBlocks(rest.framework, customRules);
   const userMessage = buildRegenerateAdMessage(rest, previousVersion);
 
   // Thinking disabled — see /api/generate for full rationale. Ad-only now, so 8K

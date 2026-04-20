@@ -1,11 +1,16 @@
+"use client";
+
 /**
- * Client-side storage for user-defined custom rules (e.g. "never break first
- * person POV", "always end with a question"). Stored in localStorage so they are
- * scoped to this browser / device — no backend, no auth, no cross-user leakage.
+ * Client-side wrappers around the /api/rules endpoints.
  *
- * Every API call sends the current rules array; the server appends them into the
- * system prompt as a dedicated MY CUSTOM RULES block that takes precedence over
- * every soft guideline.
+ * Rules live on the server (Upstash Redis) and are shared across every
+ * visitor to the tool — not in localStorage. These helpers just wrap
+ * fetch() calls so components can treat rule management as a simple async
+ * API.
+ *
+ * If the network fails or the server returns non-ok, callers fall back to
+ * the empty list or re-query — we never throw from here. A Redis hiccup
+ * shouldn't break the output page.
  */
 
 export type CustomRule = {
@@ -14,65 +19,68 @@ export type CustomRule = {
   createdAt: number;
 };
 
-const STORAGE_KEY = "evergreen-ads.customRules";
-
-/** Read all rules from localStorage. SSR-safe (returns []). */
-export function loadRules(): CustomRule[] {
-  if (typeof window === "undefined") return [];
+async function parseRules(res: Response): Promise<CustomRule[] | null> {
+  if (!res.ok) return null;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    // Trust-but-verify: filter out any malformed entries.
-    return parsed.filter(
+    const j = (await res.json()) as { rules?: unknown };
+    if (!Array.isArray(j.rules)) return null;
+    return j.rules.filter(
       (r): r is CustomRule =>
         !!r &&
         typeof r === "object" &&
-        typeof (r as { id?: unknown }).id === "string" &&
-        typeof (r as { text?: unknown }).text === "string" &&
-        typeof (r as { createdAt?: unknown }).createdAt === "number",
+        typeof (r as CustomRule).id === "string" &&
+        typeof (r as CustomRule).text === "string",
     );
+  } catch {
+    return null;
+  }
+}
+
+/** Pull the current list from the server. Returns [] on any failure. */
+export async function fetchRules(): Promise<CustomRule[]> {
+  try {
+    const res = await fetch("/api/rules", { cache: "no-store" });
+    return (await parseRules(res)) ?? [];
   } catch {
     return [];
   }
 }
 
-export function saveRules(rules: CustomRule[]): void {
-  if (typeof window === "undefined") return;
+/**
+ * Persist a new rule server-side. Returns the authoritative post-write
+ * list (may equal the prior list if the rule was a duplicate).
+ */
+export async function addRule(text: string): Promise<CustomRule[]> {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(rules));
+    const res = await fetch("/api/rules", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    const parsed = await parseRules(res);
+    if (parsed) return parsed;
   } catch {
-    /* quota exceeded / private mode — silently ignore */
+    /* fall through */
   }
+  // On failure, best-effort: return whatever the server currently thinks.
+  return fetchRules();
 }
 
-export function addRule(text: string): CustomRule[] {
-  const trimmed = text.trim();
-  if (!trimmed) return loadRules();
-  const current = loadRules();
-  // Don't double-add if the exact same text already exists.
-  if (current.some((r) => r.text.trim() === trimmed)) return current;
-  const rule: CustomRule = {
-    id:
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `rule_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    text: trimmed,
-    createdAt: Date.now(),
-  };
-  const next = [...current, rule];
-  saveRules(next);
-  return next;
+/** Delete a rule by id. Returns the authoritative post-delete list. */
+export async function deleteRule(id: string): Promise<CustomRule[]> {
+  try {
+    const res = await fetch(`/api/rules/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+    const parsed = await parseRules(res);
+    if (parsed) return parsed;
+  } catch {
+    /* fall through */
+  }
+  return fetchRules();
 }
 
-export function deleteRule(id: string): CustomRule[] {
-  const next = loadRules().filter((r) => r.id !== id);
-  saveRules(next);
-  return next;
-}
-
-/** Helper for API calls — returns just the rule text strings. */
+/** Convenience for rendering / debugging. */
 export function rulesToStringArray(rules: CustomRule[]): string[] {
-  return rules.map((r) => r.text.trim()).filter(Boolean);
+  return rules.map((r) => r.text);
 }

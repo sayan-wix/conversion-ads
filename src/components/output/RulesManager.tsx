@@ -14,11 +14,28 @@ type Props = {
 
 /**
  * Compact "Rules (N)" chip at the top of the output page that opens an inline
- * panel listing every saved custom rule with a delete button. Nothing fancy —
- * plain list, oldest-first, so users can see the order they were added.
+ * panel listing every saved custom rule with a delete button. Rules live on
+ * the server (Upstash) and are shared across every visitor to the tool —
+ * deleting one removes it for everyone. Oldest-first order so users see the
+ * order they were added.
  */
 export function RulesManager({ rules, onRulesChange, disabled }: Props) {
   const [open, setOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+
+  async function handleDelete(id: string) {
+    if (pendingDelete) return;
+    setPendingDelete(id);
+    // Optimistic update so the list reacts instantly; the server response is
+    // the authoritative post-state anyway.
+    onRulesChange(rules.filter((r) => r.id !== id));
+    try {
+      const next = await deleteRule(id);
+      onRulesChange(next);
+    } finally {
+      setPendingDelete(null);
+    }
+  }
 
   return (
     <div className="w-full">
@@ -41,12 +58,12 @@ export function RulesManager({ rules, onRulesChange, disabled }: Props) {
               <p className="text-xs text-muted-foreground">
                 No saved rules yet. When you refine an ad with feedback, tick
                 &quot;Also save as a universal rule&quot; to keep that feedback
-                applied to every future generation.
+                applied to every future generation — by anyone using this tool.
               </p>
             ) : (
               <>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Applied to every generation
+                  Applied to every generation (shared across all users)
                 </p>
                 <ul className="space-y-1.5">
                   {rules.map((r, i) => (
@@ -64,10 +81,11 @@ export function RulesManager({ rules, onRulesChange, disabled }: Props) {
                         variant="ghost"
                         size="sm"
                         className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                        onClick={() => onRulesChange(deleteRule(r.id))}
+                        onClick={() => handleDelete(r.id)}
+                        disabled={pendingDelete === r.id}
                         type="button"
                         aria-label="Delete rule"
-                        title="Delete rule"
+                        title="Delete rule (removes for everyone)"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>

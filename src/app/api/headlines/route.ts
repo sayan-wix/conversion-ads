@@ -16,6 +16,7 @@ import {
   buildHeadlinesUserMessage,
 } from "@/lib/prompt/system";
 import { sanitizeOutput } from "@/lib/prompt/guardrails";
+import { loadRuleTexts } from "@/lib/serverRules";
 
 export const runtime = "nodejs";
 // Vercel Pro: 300s cap. Matches /api/generate.
@@ -45,7 +46,9 @@ export async function POST(req: Request) {
   }
 
   const { adText, previousHeadlines, ...rest } = parsed.data;
-  const systemBlocks = buildSystemBlocks(rest.framework, rest.customRules);
+  // Server-side rules from Upstash — shared across all users.
+  const customRules = await loadRuleTexts();
+  const systemBlocks = buildSystemBlocks(rest.framework, customRules);
   const userMessage = buildHeadlinesUserMessage(rest, adText, previousHeadlines);
 
   // Thinking disabled — this is a pure template-application task (4 formats × 5

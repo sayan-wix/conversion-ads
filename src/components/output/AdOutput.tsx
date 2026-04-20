@@ -9,8 +9,7 @@ import { FRAMEWORKS, type FrameworkId } from "@/lib/prompt/frameworks";
 import {
   addRule,
   type CustomRule,
-  loadRules,
-  rulesToStringArray,
+  fetchRules,
 } from "@/lib/customRules";
 import { RulesManager } from "./RulesManager";
 import { FeedbackBox } from "./FeedbackBox";
@@ -70,12 +69,14 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
   const [elapsed, setElapsed] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Persistent user rules (localStorage). Sent with every API call so the
-  // server can inject them into the system prompt as hard rules.
+  // Shared rules live server-side (Upstash). We fetch a local copy just so
+  // the RulesManager chip can show the count / list. API routes read the
+  // authoritative list directly from Redis on every request — we never send
+  // `customRules` in the request body.
   const [rules, setRules] = useState<CustomRule[]>([]);
 
   useEffect(() => {
-    setRules(loadRules());
+    fetchRules().then(setRules);
   }, []);
 
   const framework = FRAMEWORKS[input.framework];
@@ -201,22 +202,9 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
     }
   }
 
-  /**
-   * Every outgoing request spreads this so the server gets the current
-   * wizard inputs + the current custom-rules list in a single object.
-   * Keeping it in a helper makes sure we never forget to attach the rules.
-   */
-  function withRules(extra: Record<string, unknown> = {}): Record<string, unknown> {
-    return {
-      ...input,
-      customRules: rulesToStringArray(rules),
-      ...extra,
-    };
-  }
-
   /** Initial ad generation (runs once on mount). */
   async function streamGenerateAd() {
-    await runStream("/api/generate", withRules(), "ad", "generate");
+    await runStream("/api/generate", { ...input }, "ad", "generate");
   }
 
   /** Regenerate the ad with a different angle. Clears headlines since they're
@@ -224,7 +212,7 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
   async function regenerateAd() {
     await runStream(
       "/api/regenerate",
-      withRules({ previousVersion: ad }),
+      { ...input, previousVersion: ad },
       "ad",
       "regenerate",
     );
@@ -236,7 +224,7 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
     if (!ad.trim()) return;
     await runStream(
       "/api/headlines",
-      withRules({ adText: ad }),
+      { ...input, adText: ad },
       "headlines",
       "generate",
     );
@@ -247,7 +235,7 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
     if (!ad.trim()) return;
     await runStream(
       "/api/headlines",
-      withRules({ adText: ad, previousHeadlines: headlines }),
+      { ...input, adText: ad, previousHeadlines: headlines },
       "headlines",
       "regenerate",
     );
@@ -255,21 +243,26 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
 
   /**
    * Apply user feedback to the ad (targeted revision, not full regeneration).
-   * If `saveAsRule` is true, the feedback is also stored in localStorage so it
-   * gets applied to every future generation.
+   *
+   * If `saveAsRule` is true:
+   *   1. POST the feedback to /api/rules → Upstash (await it so Redis is
+   *      updated BEFORE the revise call reads from it).
+   *   2. Then fire /api/revise — the server will load rules from Redis and
+   *      see the new one, so it applies on this very call AND every future
+   *      generation by anyone.
+   *
+   * If `saveAsRule` is false, we just fire the revise — no persistence.
    */
   async function reviseAd(feedback: string, saveAsRule: boolean) {
     if (!ad.trim() || !feedback.trim()) return;
-    // Save the rule BEFORE the request so it's included in customRules on
-    // this very call — guarantees the revision both applies the feedback
-    // AND anchors it as a rule for consistency.
-    const nextRules = saveAsRule ? addRule(feedback) : rules;
-    if (saveAsRule) setRules(nextRules);
+    if (saveAsRule) {
+      const nextRules = await addRule(feedback);
+      setRules(nextRules);
+    }
     await runStream(
       "/api/revise",
       {
         ...input,
-        customRules: rulesToStringArray(nextRules),
         target: "ad",
         currentText: ad,
         feedback,
@@ -282,13 +275,14 @@ export function AdOutput({ input, onStartOver, onBack }: Props) {
   /** Apply user feedback to the headlines. Same save-as-rule behavior. */
   async function reviseHeadlines(feedback: string, saveAsRule: boolean) {
     if (!headlines.trim() || !feedback.trim()) return;
-    const nextRules = saveAsRule ? addRule(feedback) : rules;
-    if (saveAsRule) setRules(nextRules);
+    if (saveAsRule) {
+      const nextRules = await addRule(feedback);
+      setRules(nextRules);
+    }
     await runStream(
       "/api/revise",
       {
         ...input,
-        customRules: rulesToStringArray(nextRules),
         target: "headlines",
         currentText: headlines,
         feedback,

@@ -10,6 +10,7 @@ import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
 import { WizardInputSchema } from "@/lib/validate";
 import { buildSystemBlocks, buildAdUserMessage } from "@/lib/prompt/system";
 import { sanitizeOutput } from "@/lib/prompt/guardrails";
+import { loadRuleTexts } from "@/lib/serverRules";
 
 export const runtime = "nodejs";
 // Vercel Pro: 300s cap. Gives Claude room to read huge pasted documents
@@ -65,7 +66,12 @@ export async function POST(req: Request) {
   // first token, no risk of max_tokens starving either block) and the system
   // prompt is byte-identical across both endpoints so /api/headlines gets a
   // cache hit on the second call.
-  const systemBlocks = buildSystemBlocks(input.framework, input.customRules);
+  // Universal custom rules are stored in Upstash and read server-side on every
+  // request. The client never sends them — they're curated by whoever uses the
+  // tool via the "Also save as a universal rule" checkbox, and they apply to
+  // every visitor going forward.
+  const customRules = await loadRuleTexts();
+  const systemBlocks = buildSystemBlocks(input.framework, customRules);
   const userMessage = buildAdUserMessage(input);
 
   // 4. Stream from Anthropic
