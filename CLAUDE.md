@@ -175,6 +175,25 @@ v2 feature and needs explicit sign-off.
 - Default runtime is `nodejs`. Edge is opt-in via `export const runtime = 'edge'`.
 - When in doubt, read `node_modules/next/dist/docs/` — it's the pinned, accurate version.
 
+### 12. Humanizer rules are baked into the guardrails, not a separate skill
+The humanizer Claude Code skill only runs in local Claude Code sessions — the deployed
+Vercel app can't invoke it. To get humanizer behavior in production, the skill's rules
+are compiled into `src/lib/prompt/guardrails.ts`:
+- `GUARDRAIL_RULES` has a "## 6. Humanizer rules" section (6a–6n) covering inflated
+  significance, superficial -ing tails, promotional language, weasel words, negative
+  parallelisms, rule-of-three padding, synonym cycling, copula avoidance, filler
+  phrases, chatbot artifacts, upbeat conclusions, false ranges, curly quotes, rhythm.
+- `BANNED_PHRASES` includes the humanizer's high-frequency AI vocabulary (moreover,
+  furthermore, testament to, pivotal, tapestry, intricate, seamless, vibrant, nestled,
+  underscore, foster, cultivate, showcase, exemplify, evolving landscape, boasts,
+  stands as, serves as, in order to, due to the fact that, etc.).
+- `sanitizeOutput` also strips curly quotes (`" "` `' '`) → straight ASCII quotes.
+All four copy-generating endpoints (`/api/generate`, `/api/regenerate`, `/api/headlines`,
+`/api/revise`) route through `buildSystemBlocks`, so they all inherit the humanizer
+rules automatically. If the humanizer skill is updated upstream, re-sync by reading
+`~/.claude/plugins/marketplaces/local-desktop-app-uploads/meta-skills/skills/humanizer/SKILL.md`
+and mirroring any new patterns into this file.
+
 ## What "done" looks like per phase
 
 - **Phase 1** ✅ Scaffold + deps + structure + this CLAUDE.md
