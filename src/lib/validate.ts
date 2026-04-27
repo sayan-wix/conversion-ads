@@ -5,21 +5,25 @@ import { z } from "zod";
  * full avatar documents (20+ pages) or mechanism briefs (30-40+ pages). At ~3,000 chars
  * per page, we allow well above that. The Anthropic model has a 1M-token context; long
  * inputs are fine but will push per-generation token cost up linearly.
+ *
+ * Why product + promise are MAX_DOC (not MAX_SMALL): users in the wild paste full
+ * sales-page drafts / offer briefs / promise narratives into these fields rather than
+ * a one-liner. Capping them at 50K hit real users with "Validation failed. product:
+ * Too big" errors. We now allow up to ~160 pages on every text field except CTA.
  */
-const MAX_SMALL = 50_000;      // product, promise — short-form fields, but allow long notes
-const MAX_DOC = 500_000;       // audience, proof — ~160 pages of text
+const MAX_DOC = 500_000;       // product, promise, audience, proof — ~160 pages of text
 const MAX_BIG_DOC = 1_000_000; // mechanism — ~330 pages of text
 const MAX_CTA = 5_000;
 
 export const WizardInputSchema = z.object({
   /** Step 1: What is the product/offer? (or a detailed offer brief) */
-  product: z.string().min(3).max(MAX_SMALL),
+  product: z.string().min(3).max(MAX_DOC),
 
   /** Step 2: Audience / avatar (can paste full avatar doc) */
   audience: z.string().min(3).max(MAX_DOC),
 
   /** Step 3: Big promise / desired outcome */
-  promise: z.string().min(3).max(MAX_SMALL),
+  promise: z.string().min(3).max(MAX_DOC),
 
   /** Step 4: Mechanism (can paste full mechanism brief — 30-40 pages typical) */
   mechanism: z.string().min(3).max(MAX_BIG_DOC),
